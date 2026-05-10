@@ -1,0 +1,44 @@
+<launch>
+  <!--
+    Full manual monitor stack.
+    Physical joystick/handle controls the robot.
+    Phone only monitors camera, speed, and metal status.
+  -->
+
+  <arg name="start_bringup" default="true" />
+  <arg name="start_camera" default="true" />
+  <arg name="start_metal" default="true" />
+  <arg name="start_dashboard_backend" default="true" />
+
+  <arg name="serial_port" default="/dev/ttyUSB0" />
+  <arg name="baudrate" default="115200" />
+
+  <arg name="camera_device" default="/dev/video0" />
+  <arg name="image_width" default="640" />
+  <arg name="image_height" default="480" />
+  <arg name="pixel_format" default="yuyv" />
+
+  <!-- Yahboom base stack: odom, base, joystick/handle stack if configured there. -->
+  <include if="$(arg start_bringup)" file="$(find transbot_bringup)/launch/bringup.launch" />
+
+  <!-- USB camera publisher. Publishes /usb_cam/image_raw. -->
+  <node if="$(arg start_camera)" pkg="usb_cam" type="usb_cam_node" name="usb_cam" output="screen">
+    <param name="video_device" value="$(arg camera_device)" />
+    <param name="image_width" value="$(arg image_width)" />
+    <param name="image_height" value="$(arg image_height)" />
+    <param name="pixel_format" value="$(arg pixel_format)" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="io_method" value="mmap" />
+  </node>
+
+  <!-- Existing Nano metal mapper. -->
+  <include if="$(arg start_metal)" file="$(find sdp_nfam)/launch/sdp_metal_bridge.launch">
+    <arg name="serial_port" value="$(arg serial_port)" />
+    <arg name="baudrate" value="$(arg baudrate)" />
+  </include>
+
+  <!-- Rosbridge + web_video_server + status bridge. -->
+  <include if="$(arg start_dashboard_backend)" file="$(find sdp_nfam)/launch/sdp_phone_dashboard.launch">
+    <arg name="serial_port" value="$(arg serial_port)" />
+  </include>
+</launch>

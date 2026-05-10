@@ -1,0 +1,20 @@
+<launch>
+  <!-- Starts the existing Arduino Nano metal serial mapper. -->
+  <arg name="serial_port" default="/dev/ttyUSB0" />
+  <arg name="baudrate" default="115200" />
+  <arg name="metal_topic" default="/metal_detections" />
+
+  <!--
+    Expected file location:
+      ~/transbot_ws/src/sdp_nfam/scripts/metal/metal_serial_mapper_v2.py
+
+    If your current mapper is still at scripts/metal_serial_mapper_v2.py,
+    either move it into scripts/metal/ or edit the type below.
+  -->
+  <node pkg="sdp_nfam" type="metal_serial_mapper_v2.py" name="metal_serial_mapper_v2" output="screen">
+    <param name="port" value="$(arg serial_port)" />
+    <param name="serial_port" value="$(arg serial_port)" />
+    <param name="baudrate" value="$(arg baudrate)" />
+    <param name="metal_topic" value="$(arg metal_topic)" />
+  </node>
+</launch>

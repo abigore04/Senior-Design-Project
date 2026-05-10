@@ -1,0 +1,28 @@
+<launch>
+  <!-- Phone monitor backend only: no cmd_vel, no arm control. -->
+
+  <arg name="rosbridge_port" default="9090" />
+  <arg name="video_port" default="8080" />
+  <arg name="serial_port" default="/dev/ttyUSB0" />
+  <arg name="metal_topic" default="/metal_detections" />
+  <arg name="odom_topic" default="/odom" />
+  <arg name="detector_status_topic" default="/metal_detector_status" />
+
+  <!-- Browser <-> ROS JSON websocket -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+    <arg name="port" value="$(arg rosbridge_port)" />
+  </include>
+
+  <!-- Browser camera stream from ROS image topics -->
+  <node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen">
+    <param name="port" value="$(arg video_port)" />
+  </node>
+
+  <!-- Lightweight status publisher. It does not open the serial port, so it does not conflict with mapper. -->
+  <node pkg="sdp_nfam" type="robot_status_bridge.py" name="robot_status_bridge" output="screen">
+    <param name="serial_port" value="$(arg serial_port)" />
+    <param name="metal_topic" value="$(arg metal_topic)" />
+    <param name="odom_topic" value="$(arg odom_topic)" />
+    <param name="detector_status_topic" value="$(arg detector_status_topic)" />
+  </node>
+</launch>
