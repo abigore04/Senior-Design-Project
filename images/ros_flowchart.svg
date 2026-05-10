@@ -1,0 +1,283 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 780' width='1400' height='780'>
+<rect width='1400' height='780' fill='white'/>
+<text x='700' y='16' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-size='12' font-weight='bold' fill='#1e293b'>ROS System Architecture — Autonomous Metal Detection Robot</text>
+<rect x='5' y='22' width='195' height='230' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='13' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Manual Control</text>
+<rect x='13' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='57.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/joy_node</text>
+<text x='57.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>joy_node</text>
+<rect x='13' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/joy</text>
+<line x1='57.0' y1='65.0' x2='57.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,69.0 54.0,64.0 60.0,64.0' fill='#6b7280'/>
+<rect x='13' y='87' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='57.0' y='96.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/transbot_joy</text>
+<text x='57.0' y='106.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='60.0' y1='83.0' x2='60.0' y2='87.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='60.0,87.0 57.0,82.0 63.0,82.0' fill='#6b7280'/>
+<rect x='13' y='117' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='124.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/cmd_vel</text>
+<line x1='57.0' y1='113.0' x2='57.0' y2='117.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,117.0 54.0,112.0 60.0,112.0' fill='#6b7280'/>
+<rect x='13' y='137' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='144.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/TargetAngle</text>
+<line x1='57.0' y1='131.0' x2='57.0' y2='137.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,137.0 54.0,132.0 60.0,132.0' fill='#6b7280'/>
+<rect x='13' y='157' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='164.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/PWMServo</text>
+<line x1='57.0' y1='151.0' x2='57.0' y2='157.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,157.0 54.0,152.0 60.0,152.0' fill='#6b7280'/>
+<rect x='13' y='177' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='184.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/Adjust</text>
+<line x1='57.0' y1='171.0' x2='57.0' y2='177.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,177.0 54.0,172.0 60.0,172.0' fill='#6b7280'/>
+<rect x='13' y='197' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='60.0' y='204.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/JoyState</text>
+<line x1='57.0' y1='191.0' x2='57.0' y2='197.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='57.0,197.0 54.0,192.0 60.0,192.0' fill='#6b7280'/>
+<rect x='207' y='22' width='200' height='160' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='215' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Transbot Base Driver</text>
+<rect x='215' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='259.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/transbot_node</text>
+<text x='259.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='107.0' y1='124.0' x2='215.0' y2='124.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='215.0,124.0 210.0,127.0 210.0,121.0' fill='#9ca3af'/>
+<line x1='107.0' y1='144.0' x2='215.0' y2='144.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='215.0,144.0 210.0,147.0 210.0,141.0' fill='#9ca3af'/>
+<line x1='107.0' y1='164.0' x2='215.0' y2='164.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='215.0,164.0 210.0,167.0 210.0,161.0' fill='#9ca3af'/>
+<line x1='107.0' y1='184.0' x2='215.0' y2='184.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='215.0,184.0 210.0,187.0 210.0,181.0' fill='#9ca3af'/>
+<rect x='215' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='262.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/transbot/get_vel</text>
+<line x1='259.0' y1='65.0' x2='259.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='259.0,69.0 256.0,64.0 262.0,64.0' fill='#6b7280'/>
+<rect x='215' y='89' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='262.0' y='96.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/transbot/imu</text>
+<line x1='259.0' y1='83.0' x2='259.0' y2='89.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='259.0,89.0 256.0,84.0 262.0,84.0' fill='#6b7280'/>
+<rect x='215' y='109' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='262.0' y='116.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/voltage</text>
+<line x1='259.0' y1='103.0' x2='259.0' y2='109.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='259.0,109.0 256.0,104.0 262.0,104.0' fill='#6b7280'/>
+<rect x='215' y='129' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='262.0' y='136.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/edition</text>
+<line x1='259.0' y1='123.0' x2='259.0' y2='129.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='259.0,129.0 256.0,124.0 262.0,124.0' fill='#6b7280'/>
+<rect x='415' y='22' width='225' height='355' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='423' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Odometry &amp; IMU Pipeline</text>
+<rect x='423' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='467.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/base_node</text>
+<text x='467.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<rect x='423' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='470.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/odom_raw</text>
+<line x1='467.0' y1='65.0' x2='467.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='467.0,69.0 464.0,64.0 470.0,64.0' fill='#6b7280'/>
+<rect x='533' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='577.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/apply_calib</text>
+<text x='577.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<rect x='533' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='580.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/imu/data_raw</text>
+<line x1='577.0' y1='65.0' x2='577.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='577.0,69.0 574.0,64.0 580.0,64.0' fill='#6b7280'/>
+<rect x='533' y='87' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='577.0' y='96.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/imu_filter</text>
+<text x='577.0' y='106.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>Madgwick</text>
+<line x1='580.0' y1='83.0' x2='580.0' y2='87.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='580.0,87.0 577.0,82.0 583.0,82.0' fill='#6b7280'/>
+<rect x='533' y='117' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='580.0' y='124.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/imu/data</text>
+<line x1='577.0' y1='113.0' x2='577.0' y2='117.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='577.0,117.0 574.0,112.0 580.0,112.0' fill='#6b7280'/>
+<rect x='478' y='141' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='522.0' y='150.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/ekf_localization</text>
+<text x='522.0' y='160.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='470.0' y1='83.0' x2='522.0' y2='141.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='522.0,141.0 516.4,139.3 520.9,135.3' fill='#6b7280'/>
+<line x1='580.0' y1='131.0' x2='522.0' y2='141.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='522.0,141.0 526.4,137.2 527.4,143.1' fill='#6b7280'/>
+<rect x='423' y='147' width='72' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='459.0' y='154.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/set_pose</text>
+<line x1='495.0' y1='154.0' x2='478.0' y2='154.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='478.0,154.0 483.0,151.0 483.0,157.0' fill='#6b7280'/>
+<rect x='478' y='171' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='525.0' y='178.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/odom</text>
+<line x1='522.0' y1='167.0' x2='522.0' y2='171.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='522.0,171.0 519.0,166.0 525.0,166.0' fill='#6b7280'/>
+<rect x='478' y='189' width='94' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='525.0' y='196.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf (EKF→odom)</text>
+<line x1='522.0' y1='185.0' x2='522.0' y2='189.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='522.0,189.0 519.0,184.0 525.0,184.0' fill='#9ca3af'/>
+<line x1='309.0' y1='76.0' x2='423.0' y2='76.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='423.0,76.0 418.0,79.0 418.0,73.0' fill='#9ca3af'/>
+<line x1='309.0' y1='96.0' x2='533.0' y2='96.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='533.0,96.0 528.0,99.0 528.0,93.0' fill='#9ca3af'/>
+<rect x='648' y='22' width='205' height='225' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='656' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>LiDAR, SLAM &amp; Mapping</text>
+<rect x='656' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='700.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/rplidarNode</text>
+<text x='700.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<rect x='656' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='703.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/scan</text>
+<line x1='700.0' y1='65.0' x2='700.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='700.0,69.0 697.0,64.0 703.0,64.0' fill='#6b7280'/>
+<rect x='761' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='805.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/slam_gmapping</text>
+<text x='805.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='703.0' y1='76.0' x2='761.0' y2='52.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='761.0,52.0 757.5,56.7 755.2,51.1' fill='#9ca3af'/>
+<rect x='761' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='808.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/map</text>
+<line x1='805.0' y1='65.0' x2='805.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='805.0,69.0 802.0,64.0 808.0,64.0' fill='#6b7280'/>
+<rect x='761' y='85' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='808.0' y='92.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/map_metadata</text>
+<line x1='805.0' y1='83.0' x2='805.0' y2='85.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='805.0,85.0 802.0,80.0 808.0,80.0' fill='#6b7280'/>
+<rect x='761' y='101' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='808.0' y='108.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/entropy</text>
+<line x1='805.0' y1='99.0' x2='805.0' y2='101.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='805.0,101.0 802.0,96.0 808.0,96.0' fill='#6b7280'/>
+<text x='759' y='36' font-family='Arial,Helvetica,sans-serif' font-size='6.5' fill='#9ca3af'>needs /tf,/tf_static</text>
+<rect x='656' y='93' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='700.0' y='102.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/save_map</text>
+<text x='700.0' y='112.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='808.0' y1='83.0' x2='700.0' y2='93.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='700.0,93.0 704.7,89.6 705.3,95.5' fill='#6b7280'/>
+<rect x='861' y='22' width='205' height='180' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='869' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Robot Model &amp; TF Environment</text>
+<rect x='869' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='913.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/joint_state_pub</text>
+<text x='913.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<rect x='869' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='916.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/joint_states</text>
+<line x1='913.0' y1='65.0' x2='913.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='913.0,69.0 910.0,64.0 916.0,64.0' fill='#6b7280'/>
+<rect x='974' y='39' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='1018.0' y='48.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/robot_state_pub</text>
+<text x='1018.0' y='58.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<line x1='916.0' y1='76.0' x2='974.0' y2='52.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='974.0,52.0 970.5,56.7 968.2,51.1' fill='#9ca3af'/>
+<rect x='974' y='69' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='1021.0' y='76.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf</text>
+<line x1='1018.0' y1='65.0' x2='1018.0' y2='69.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='1018.0,69.0 1015.0,64.0 1021.0,64.0' fill='#6b7280'/>
+<rect x='974' y='85' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='1021.0' y='92.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf_static</text>
+<line x1='1018.0' y1='83.0' x2='1018.0' y2='85.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='1018.0,85.0 1015.0,80.0 1021.0,80.0' fill='#6b7280'/>
+<rect x='869' y='93' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='913.0' y='102.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/baselink_to_imu</text>
+<text x='913.0' y='112.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>static tf</text>
+<rect x='869' y='123' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='916.0' y='130.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf_static</text>
+<line x1='913.0' y1='119.0' x2='913.0' y2='123.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='913.0,123.0 910.0,118.0 916.0,118.0' fill='#6b7280'/>
+<rect x='1074' y='22' width='148' height='95' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='1082' y='35' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Support &amp; Services</text>
+<rect x='1082' y='40' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='1126.0' y='49.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/DeviceSrv</text>
+<text x='1126.0' y='59.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>node</text>
+<rect x='1082' y='71' width='94' height='14' rx='7.0' fill='#fef3c7' stroke='#b45309' stroke-width='1'/>
+<text x='1129.0' y='78.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/CamDevice</text>
+<line x1='1126.0' y1='66.0' x2='1126.0' y2='71.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='1126.0,71.0 1123.0,66.0 1129.0,66.0' fill='#6b7280'/>
+<rect x='1082' y='90' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='1126.0' y='99.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/world_canvas</text>
+<text x='1126.0' y='109.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>server</text>
+<rect x='648' y='390' width='205' height='115' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='656' y='403' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Metal Detection Interface</text>
+<rect x='656' y='408' width='88' height='26' rx='4' fill='#fce7f3' stroke='#be185d' stroke-width='1.2'/>
+<text x='700.0' y='417.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>Arduino/Serial</text>
+<text x='700.0' y='427.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>ext. source</text>
+<rect x='761' y='408' width='88' height='26' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='805.0' y='417.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/metal_serial</text>
+<text x='805.0' y='427.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>_mapper</text>
+<line x1='744.0' y1='421.0' x2='761.0' y2='421.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='761.0,421.0 756.0,424.0 756.0,418.0' fill='#6b7280'/>
+<rect x='708' y='442' width='100' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='758.0' y='449.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/metal_detections</text>
+<line x1='805.0' y1='434.0' x2='805.0' y2='442.0' stroke='#6b7280' stroke-width='1.1' />
+<polygon points='805.0,442.0 802.0,437.0 808.0,437.0' fill='#6b7280'/>
+<text x='759' y='405' font-family='Arial,Helvetica,sans-serif' font-size='6.5' fill='#9ca3af'>needs /tf,/tf_static</text>
+<rect x='5' y='390' width='400' height='155' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='13' y='403' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Autonomous Coverage Navigation</text>
+<rect x='160' y='415' width='108' height='32' rx='4' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1.2'/>
+<text x='214.0' y='427.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>/metal_detector</text>
+<text x='214.0' y='437.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>/coverage</text>
+<rect x='13' y='408' width='72' height='14' rx='7.0' fill='#f8fafc' stroke='#9ca3af' stroke-width='1'/>
+<text x='49.0' y='415.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/odom</text>
+<line x1='49.0' y1='422.0' x2='214.0' y2='415.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='214.0,415.0 209.1,418.2 208.9,412.2' fill='#9ca3af'/>
+<rect x='87' y='408' width='72' height='14' rx='7.0' fill='#f8fafc' stroke='#9ca3af' stroke-width='1'/>
+<text x='123.0' y='415.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/imu/data</text>
+<line x1='123.0' y1='422.0' x2='214.0' y2='415.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='214.0,415.0 209.2,418.4 208.8,412.4' fill='#9ca3af'/>
+<rect x='161' y='408' width='72' height='14' rx='7.0' fill='#f8fafc' stroke='#9ca3af' stroke-width='1'/>
+<text x='197.0' y='415.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/scan</text>
+<line x1='197.0' y1='422.0' x2='214.0' y2='415.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='214.0,415.0 210.5,419.7 208.2,414.1' fill='#9ca3af'/>
+<rect x='235' y='408' width='72' height='14' rx='7.0' fill='#f8fafc' stroke='#be185d' stroke-width='1'/>
+<text x='271.0' y='415.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/metal_detections</text>
+<line x1='271.0' y1='422.0' x2='214.0' y2='415.0' stroke='#be185d' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='214.0,415.0 219.3,412.6 218.6,418.6' fill='#be185d'/>
+<rect x='309' y='408' width='72' height='14' rx='7.0' fill='#f8fafc' stroke='#9ca3af' stroke-width='1'/>
+<text x='345.0' y='415.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf + /tf_static</text>
+<line x1='345.0' y1='422.0' x2='214.0' y2='415.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='214.0,415.0 219.2,412.3 218.8,418.3' fill='#9ca3af'/>
+<rect x='60' y='455' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='107.0' y='462.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/cmd_vel</text>
+<rect x='205' y='455' width='94' height='14' rx='7.0' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='252.0' y='462.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/TargetAngle</text>
+<line x1='214.0' y1='447.0' x2='107.0' y2='455.0' stroke='#1d4ed8' stroke-width='1.1' />
+<polygon points='107.0,455.0 111.8,451.6 112.2,457.6' fill='#1d4ed8'/>
+<line x1='214.0' y1='447.0' x2='252.0' y2='455.0' stroke='#1d4ed8' stroke-width='1.1' />
+<polygon points='252.0,455.0 246.5,456.9 247.7,451.0' fill='#1d4ed8'/>
+<text x='13' y='540' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#9ca3af' font-style='italic'>↑ These also feed back to /transbot_node</text>
+<rect x='861' y='390' width='360' height='115' rx='7' fill='#f8fafc' stroke='#94a3b8' stroke-width='1' stroke-dasharray='5,3'/>
+<text x='869' y='403' font-family='Arial,Helvetica,sans-serif' font-size='9.5' fill='#475569' font-weight='bold' font-style='italic'>Visualization / Inspection (RViz)</text>
+<rect x='869' y='418' width='108' height='34' rx='4' fill='#e0f2fe' stroke='#0369a1' stroke-width='1.2'/>
+<text x='923.0' y='431.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#111827' font-weight='bold'>RViz / Monitor</text>
+<text x='923.0' y='441.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#4b5563'>Tool</text>
+<rect x='869' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='896.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/map</text>
+<line x1='896.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 918.2,421.4 917.8,415.4' fill='#9ca3af'/>
+<rect x='925' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='952.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/scan</text>
+<line x1='952.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 928.2,415.4 927.8,421.3' fill='#9ca3af'/>
+<rect x='981' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='1008.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/metal_detections</text>
+<line x1='1008.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 928.1,415.1 927.9,421.1' fill='#9ca3af'/>
+<rect x='1037' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='1064.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/odom</text>
+<line x1='1064.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 928.0,415.1 928.0,421.1' fill='#9ca3af'/>
+<rect x='1093' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='1120.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf</text>
+<line x1='1120.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 928.0,415.1 928.0,421.1' fill='#9ca3af'/>
+<rect x='1149' y='406' width='54' height='14' rx='7.0' fill='#f1f5f9' stroke='#9ca3af' stroke-width='1'/>
+<text x='1176.0' y='413.0' text-anchor='middle' dominant-baseline='middle' font-family='Arial,Helvetica,sans-serif' font-size='7' fill='#111827'>/tf_static</text>
+<line x1='1176.0' y1='420.0' x2='923.0' y2='418.0' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<polygon points='923.0,418.0 928.0,415.0 928.0,421.0' fill='#9ca3af'/>
+<line x1='5' y1='725' x2='1395' y2='725' stroke='#e2e8f0' stroke-width='1'/>
+<text x='8' y='738' font-family='Arial,Helvetica,sans-serif' font-size='8.5' font-weight='bold' fill='#374151'>Legend:</text>
+<rect x='60' y='730' width='16' height='11' rx='3' fill='#dbeafe' stroke='#1d4ed8' stroke-width='1'/>
+<text x='79' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>ROS Node</text>
+<rect x='190' y='730' width='16' height='11' rx='3' fill='#dcfce7' stroke='#15803d' stroke-width='1'/>
+<text x='209' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>Topic/Message</text>
+<rect x='320' y='730' width='16' height='11' rx='3' fill='#fef3c7' stroke='#b45309' stroke-width='1'/>
+<text x='339' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>Service</text>
+<rect x='450' y='730' width='16' height='11' rx='3' fill='#fce7f3' stroke='#be185d' stroke-width='1'/>
+<text x='469' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>External Source</text>
+<rect x='580' y='730' width='16' height='11' rx='3' fill='#e0f2fe' stroke='#0369a1' stroke-width='1'/>
+<text x='599' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>Visualization</text>
+<line x1='710' y1='735' x2='728' y2='735' stroke='#9ca3af' stroke-width='1.1' stroke-dasharray='4,2'/>
+<text x='731' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>TF/optional flow</text>
+<line x1='840' y1='735' x2='858' y2='735' stroke='#6b7280' stroke-width='1.1'/>
+<polygon points='858,735 853,732 853,738' fill='#6b7280'/>
+<text x='861' y='739' font-family='Arial,Helvetica,sans-serif' font-size='8' fill='#374151'>Primary data flow</text>
+</svg>
