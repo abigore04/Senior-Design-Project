@@ -1,0 +1,2714 @@
+jetson@Transbot:~/transbot_ws$ cd
+jetson@Transbot:~$ clear
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+jetson@Transbot:~$ cd ~
+jetson@Transbot:~$ source ~/transbot_ws/devel/setup.bash
+jetson@Transbot:~$ 
+ojetson@Transbot:~$ OUT=~/sdp_platform_audit_$(date +%Y%m%d_%H%M%S).txt
+jetson@Transbot:~$ 
+jetson@Transbot:~$ {
+> echo "============================================================"
+> echo "SDP TRANSBOT PLATFORM AUDIT"
+> echo "Generated: $(date)"
+> echo "Hostname: $(hostname)"
+> echo "User: $(whoami)"
+> echo "============================================================"
+> 
+> echo ""
+> echo "==================== 1. COMPUTER / BOARD ===================="
+> echo "Device tree model:"
+> cat /proc/device-tree/model 2>/dev/null || echo "No /proc/device-tree/model"
+> 
+> echo ""
+> echo "CPU info:"
+> lscpu 2>/dev/null || cat /proc/cpuinfo | head -80
+> 
+> echo ""
+> echo "Memory:"
+> free -h
+> 
+> echo ""
+> echo "Disk:"
+> df -h
+> 
+> echo ""
+> echo "Kernel:"
+> uname -a
+> 
+> echo ""
+> echo "Jetson / L4T / JetPack information:"
+> cat /etc/nv_tegra_release 2>/dev/null || echo "No nv_tegra_release file"
+> dpkg-query --show nvidia-l4t-core 2>/dev/null || echo "nvidia-l4t-core not found"
+> command -v jetson_release >/dev/null 2>&1 && jetson_release || echo "jetson_release not installed"
+> 
+> echo ""
+> echo "Power mode:"
+> command -v nvpmodel >/dev/null 2>&1 && sudo nvpmodel -q || echo "nvpmodel not available"
+> 
+> echo ""
+> echo "Temperature / clocks snapshot:"
+> command -v tegrastats >/dev/null 2>&1 && timeout 5 tegrastats || echo "tegrastats not available"
+> 
+> echo ""
+> echo "==================== 2. OPERATING SYSTEM ====================="
+> lsb_release -a 2>/dev/null || cat /etc/os-release
+> 
+> echo ""
+> echo "Python versions:"
+> python --version 2>&1
+> python2 --version 2>&1
+> python3 --version 2>&1
+> 
+> echo ""
+> echo "ROS environment:"
+> echo "ROS_DISTRO=$ROS_DISTRO"
+> echo "ROS_MASTER_URI=$ROS_MASTER_URI"
+> echo "ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH"
+> 
+> echo ""
+> echo "ROS version:"
+> rosversion -d 2>/dev/null || echo "rosversion failed"
+> 
+> echo ""
+> echo "Installed ROS packages related to navigation / SLAM / localization:"
+> dpkg -l | grep -E "ros-melodic|navigation|gmapping|slam|robot-localization|tf|rviz" | head -150
+> 
+> echo ""
+> echo "==================== 3. USB / SERIAL DEVICES ================="
+> echo "/dev video devices:"
+> ls -l /dev/video* 2>/dev/null || echo "No /dev/video devices"
+> 
+> echo ""
+> echo "/dev ttyUSB / ttyACM:"
+> ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || echo "No ttyUSB/ttyACM devices"
+> 
+> echo ""
+> echo "USB devices:"
+> lsusb
+> 
+> echo ""
+> echo "Recent kernel messages for USB/serial/video/LiDAR:"
+> dmesg | grep -Ei "usb|ttyUSB|ttyACM|video|camera|lidar|rplidar|ydlidar" | tail -120
+> 
+> echo ""
+> echo "==================== 4. CAMERA INFORMATION ==================="
+> echo "v4l2 camera info:"
+> if command -v v4l2-ctl >/dev/null 2>&1; then
+>     v4l2-ctl --list-devices
+>     echo ""
+>     for dev in /dev/video*; do
+>         echo "---- $dev ----"
+>         v4l2-ctl -d "$dev" --all 2>/dev/null
+>         echo ""
+>         v4l2-ctl -d "$dev" --list-formats-ext 2>/dev/null
+>     done
+> else
+>     echo "v4l2-ctl not installed. Install with: sudo apt install v4l-utils"
+> fi
+> 
+> echo ""
+> echo "==================== 5. ROS NODES ============================"
+> echo "ROS nodes:"
+> rosnode list 2>/dev/null || echo "rosnode list failed"
+> 
+> echo ""
+> echo "ROS node info:"
+> for n in $(rosnode list 2>/dev/null); do
+>     echo ""
+>     echo "---- NODE: $n ----"
+>     rosnode info "$n" 2>/dev/null | head -80
+> done
+> 
+> echo ""
+> echo "==================== 6. ROS TOPICS ==========================="
+> echo "ROS topics:"
+> rostopic list 2>/dev/null || echo "rostopic list failed"
+> 
+> echo ""
+> echo "ROS topic types:"
+> rostopic list 2>/dev/null | while read t; do
+>     echo "$t : $(rostopic type $t 2>/dev/null)"
+> done
+> 
+> echo ""
+> echo "Topic info for important SDP topics:"
+> for t in /cmd_vel /odom /imu/data /scan /metal_detections /TargetAngle /PWMServo /servo_control /usb_cam/image_raw /camera/image_raw; do
+>     echo ""
+>     echo "---- TOPIC: $t ----"
+>     rostopic info "$t" 2>/dev/null || echo "Topic not found"
+> done
+> 
+> echo ""
+> echo "==================== 7. TOPIC FREQUENCIES ===================="
+> for t in /odom /imu/data /scan /usb_cam/image_raw /camera/image_raw /metal_detections; do
+>     echo ""
+>     echo "---- HZ: $t ----"
+>     timeout 7 rostopic hz "$t" 2>&1 || echo "Could not measure $t"
+> done
+> 
+> echo ""
+> echo "==================== 8. SAMPLE ROS MESSAGES =================="
+> echo ""
+> echo "Sample /odom:"
+> timeout 5 rostopic echo -n 1 /odom 2>&1 || echo "No /odom sample"
+> 
+> echo ""
+> echo "Sample /imu/data:"
+> timeout 5 rostopic echo -n 1 /imu/data 2>&1 || echo "No /imu/data sample"
+> 
+> echo ""
+> echo "Sample /scan metadata:"
+> timeout 5 rostopic echo -n 1 /scan/header /scan/angle_min /scan/angle_max /scan/angle_increment /scan/range_min /scan/range_max 2>&1 || echo "No /scan metadata sample"
+> 
+> echo ""
+> echo "Sample /metal_detections:"
+> timeout 5 rostopic echo -n 1 /metal_detections 2>&1 || echo "No /metal_detections sample"
+> 
+> echo ""
+> echo "==================== 9. TF / LOCALIZATION ===================="
+> echo "TF frames:"
+> rosrun tf view_frames 2>&1 || echo "view_frames failed"
+> 
+> echo ""
+> echo "TF echo map -> base_footprint:"
+> timeout 8 rosrun tf tf_echo /map /base_footprint 2>&1 || echo "No /map -> /base_footprint transform"
+> 
+> echo ""
+> echo "TF echo odom -> base_footprint:"
+> timeout 8 rosrun tf tf_echo /odom /base_footprint 2>&1 || echo "No /odom -> /base_footprint transform"
+> 
+> echo ""
+> echo "TF echo base_link -> base_footprint:"
+> timeout 8 rosrun tf tf_echo /base_link /base_footprint 2>&1 || echo "No /base_link -> /base_footprint transform"
+> 
+> echo ""
+> echo "==================== 10. ROS PARAMETERS ======================"
+> echo "Relevant ROS params:"
+> rosparam list 2>/dev/null | grep -Ei "lidar|scan|odom|imu|base|robot|camera|usb|gmapping|slam|move_base|ekf|transbot|servo|arm" || echo "No relevant params found"
+> 
+> echo ""
+> echo "Selected ROS param values:"
+> for p in $(rosparam list 2>/dev/null | grep -Ei "lidar|scan|odom|imu|base|robot|camera|usb|gmapping|slam|move_base|ekf|transbot|servo|arm"); do
+>     echo ""
+>     echo "---- PARAM: $p ----"
+>     rosparam get "$p" 2>/dev/null
+> done
+> 
+> echo ""
+> echo "==================== 11. WORKSPACE / PACKAGES ================"
+> echo "Workspace packages:"
+> find ~/transbot_ws/src -maxdepth 3 -name package.xml -print 2>/dev/null
+> 
+> echo ""
+> echo "sdp_nfam package tree:"
+> find ~/transbot_ws/src/sdp_nfam -maxdepth 4 -type f 2>/dev/null | sort || echo "No sdp_nfam package found"
+> 
+> echo ""
+> echo "Yahboom/transbot packages:"
+> rospack list 2>/dev/null | grep -Ei "transbot|yahboom|rplidar|ydlidar|gmapping|navigation|robot_localization"
+> 
+> echo ""
+> echo "Important package locations:"
+> for p in transbot_bringup transbot_msgs sdp_nfam rplidar_ros ydlidar_ros gmapping slam_gmapping robot_localization; do
+>     echo ""
+>     echo "---- PACKAGE: $p ----"
+>     rospack find "$p" 2>/dev/null || echo "Package not found"
+> done
+> 
+> echo ""
+> echo "==================== 12. LAUNCH / CONFIG FILES ==============="
+> echo "Launch files:"
+> find ~/transbot_ws/src/sdp_nfam -name "*.launch" -print 2>/dev/null | sort
+> 
+> echo ""
+> echo "YAML config files:"
+> find ~/transbot_ws/src/sdp_nfam -name "*.yaml" -print 2>/dev/null | sort
+> 
+> echo ""
+> echo "Coverage / navigation / metal scripts:"
+> find ~/transbot_ws/src/sdp_nfam -type f | grep -Ei "coverage|metal|navigation|avoid|mapper|bridge" | sort
+> 
+> echo ""
+> echo "==================== 13. NETWORK / DASHBOARD ================="
+> echo "IP addresses:"
+> ip addr show | grep -E "inet "
+> 
+> echo ""
+> echo "Listening ports:"
+> ss -tulpn 2>/dev/null | grep -E "9090|8080|7000|11311|ros|python|mjpeg|websocket" || echo "No common ROS/dashboard ports found"
+> 
+> echo ""
+> echo "==================== 14. END OF AUDIT ========================"
+> } | tee "$OUT"
+============================================================
+SDP TRANSBOT PLATFORM AUDIT
+Generated: Mon Apr 27 12:01:27 +04 2026
+Hostname: Transbot
+User: jetson
+============================================================
+
+==================== 1. COMPUTER / BOARD ====================
+Device tree model:
+NVIDIA Jetson Nano Developer Kit
+CPU info:
+Architecture:        aarch64
+Byte Order:          Little Endian
+CPU(s):              4
+On-line CPU(s) list: 0-3
+Thread(s) per core:  1
+Core(s) per socket:  4
+Socket(s):           1
+Vendor ID:           ARM
+Model:               1
+Model name:          Cortex-A57
+Stepping:            r1p1
+CPU max MHz:         1479.0000
+CPU min MHz:         102.0000
+BogoMIPS:            38.40
+L1d cache:           32K
+L1i cache:           48K
+L2 cache:            2048K
+Flags:               fp asimd evtstrm aes pmull sha1 sha2 crc32
+
+Memory:
+              total        used        free      shared  buff/cache   available
+Mem:           3.9G        3.0G        292M        105M        551M        647M
+Swap:          1.9G        434M        1.5G
+
+Disk:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        25G   21G  2.8G  89% /
+none            1.7G     0  1.7G   0% /dev
+tmpfs           2.0G   24M  2.0G   2% /dev/shm
+tmpfs           2.0G  161M  1.8G   9% /run
+tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+tmpfs           397M   12K  397M   1% /run/user/120
+tmpfs           397M  132K  396M   1% /run/user/1000
+
+Kernel:
+Linux Transbot 4.9.201-tegra #1 SMP PREEMPT Fri Feb 19 08:40:32 PST 2021 aarch64 aarch64 aarch64 GNU/Linux
+
+Jetson / L4T / JetPack information:
+# R32 (release), REVISION: 5.1, GCID: 26202423, BOARD: t210ref, EABI: aarch64, DATE: Fri Feb 19 16:45:52 UTC 2021
+nvidia-l4t-core	32.5.1-20210219084526
+ - NVIDIA Jetson Nano
+   * Jetpack 4.5.1 [L4T 32.5.1]
+   * NV Power Mode: MAXN - Type: 0
+   * jetson_stats.service: active
+ - Libraries:
+   * CUDA: 10.2.89
+   * cuDNN: 8.0.0.180
+   * TensorRT: 7.1.3.0
+   * Visionworks: 1.6.0.501
+   * OpenCV: 3.2.0 compiled CUDA: NO
+   * VPI: ii libnvvpi1 1.0.15 arm64 NVIDIA Vision Programming Interface library
+   * Vulkan: 1.2.70
+
+Power mode:
+NVPM WARN: fan mode is not set!
+NV Power Mode: MAXN
+0
+
+Temperature / clocks snapshot:
+RAM 3164/3961MB (lfb 21x4MB) SWAP 441/1980MB (cached 7MB) CPU [46%@1479,45%@1479,43%@1479,44%@1479] EMC_FREQ 0% GR3D_FREQ 39% PLL@33C CPU@34C PMIC@100C GPU@32C AO@40C thermal@33C
+RAM 3163/3961MB (lfb 21x4MB) SWAP 441/1980MB (cached 7MB) CPU [44%@1479,41%@1479,39%@1479,44%@1479] EMC_FREQ 0% GR3D_FREQ 35% PLL@33.5C CPU@34.5C PMIC@100C GPU@32C AO@40C thermal@33C
+RAM 3166/3961MB (lfb 21x4MB) SWAP 441/1980MB (cached 7MB) CPU [50%@1479,48%@1479,44%@1479,47%@1479] EMC_FREQ 0% GR3D_FREQ 45% PLL@33C CPU@34C PMIC@100C GPU@32C AO@40C thermal@33.5C
+RAM 3165/3961MB (lfb 21x4MB) SWAP 441/1980MB (cached 7MB) CPU [52%@1479,49%@1479,50%@1479,46%@1479] EMC_FREQ 0% GR3D_FREQ 53% PLL@33C CPU@34C PMIC@100C GPU@32C AO@40C thermal@32.5C
+tegrastats not available
+
+==================== 2. OPERATING SYSTEM =====================
+Distributor ID:	Ubuntu
+Description:	Ubuntu 18.04.6 LTS
+Release:	18.04
+Codename:	bionic
+
+Python versions:
+Python 3.6.9
+Python 2.7.17
+Python 3.6.9
+
+ROS environment:
+ROS_DISTRO=melodic
+ROS_MASTER_URI=http://localhost:11311
+ROS_PACKAGE_PATH=/home/jetson/software/laser_app/src:/home/jetson/transbot_ws/src:/home/jetson/software/transbot_library/src:/home/jetson/software/world_canvas/src:/opt/ros/melodic/share
+
+ROS version:
+melodic
+
+Installed ROS packages related to navigation / SLAM / localization:
+ii  arduino-core                                       2:1.0.5+dfsg2-4.1                          all          Code, examples, and libraries for the Arduino platform
+ii  cmake                                              3.10.2-1ubuntu2.18.04.2                    arm64        cross-platform, open-source make system
+ii  fonts-freefont-ttf                                 20120503-7                                 all          Freefont Serif, Sans and Mono Truetype fonts
+ii  fonts-tlwg-garuda-ttf                              1:0.6.4-2                                  all          Thai Garuda TrueType font
+ii  fonts-tlwg-kinnari-ttf                             1:0.6.4-2                                  all          Thai Kinnari TrueType font
+ii  fonts-tlwg-laksaman-ttf                            1:0.6.4-2                                  all          Thai Laksaman TrueType font
+ii  fonts-tlwg-loma-ttf                                1:0.6.4-2                                  all          Thai Loma TrueType font
+ii  fonts-tlwg-mono-ttf                                1:0.6.4-2                                  all          Thai TlwgMono TrueType font
+ii  fonts-tlwg-norasi-ttf                              1:0.6.4-2                                  all          Thai Norasi TrueType font
+ii  fonts-tlwg-purisa-ttf                              1:0.6.4-2                                  all          Thai Purisa TrueType font
+ii  fonts-tlwg-sawasdee-ttf                            1:0.6.4-2                                  all          Thai Sawasdee TrueType font
+ii  fonts-tlwg-typewriter-ttf                          1:0.6.4-2                                  all          Thai TlwgTypewriter TrueType font
+ii  fonts-tlwg-typist-ttf                              1:0.6.4-2                                  all          Thai TlwgTypist TrueType font
+ii  fonts-tlwg-typo-ttf                                1:0.6.4-2                                  all          Thai TlwgTypo TrueType font
+ii  fonts-tlwg-umpush-ttf                              1:0.6.4-2                                  all          Thai Umpush TrueType font
+ii  fonts-tlwg-waree-ttf                               1:0.6.4-2                                  all          Thai Waree TrueType font
+ii  gjs                                                1.52.5-0ubuntu18.04.1                      arm64        Mozilla-based javascript bindings for the GNOME platform
+ii  gnome-system-tools                                 3.0.0-6ubuntu1                             arm64        Cross-platform configuration utilities for GNOME
+ii  graphsurgeon-tf                                    7.1.3-1+cuda10.2                           arm64        GraphSurgeon for TensorRT package
+ii  libao-common                                       1.2.2+20180113-1ubuntu1                    all          Cross Platform Audio Output Library (Common files)
+ii  libao4:arm64                                       1.2.2+20180113-1ubuntu1                    arm64        Cross Platform Audio Output Library
+ii  libbtf1:arm64                                      1:5.1.2-2                                  arm64        permutation to block triangular form library for sparse matrices
+ii  libdvdnav4:arm64                                   6.0.0-1                                    arm64        DVD navigation library
+ii  libgjs0g                                           1.52.5-0ubuntu18.04.1                      arm64        Mozilla-based javascript bindings for the GNOME platform
+ii  libieee1284-3:arm64                                0.2.11-13                                  arm64        cross-platform library for parallel port access
+ii  libip4tc0:arm64                                    1.6.1-2ubuntu2                             arm64        netfilter libip4tc library
+ii  libip6tc0:arm64                                    1.6.1-2ubuntu2                             arm64        netfilter libip6tc library
+ii  libiptc0:arm64                                     1.6.1-2ubuntu2                             arm64        netfilter libiptc library
+ii  libnetfilter-conntrack3:arm64                      1.0.6-2                                    arm64        Netfilter netlink-conntrack library
+ii  libnfnetlink0:arm64                                1.0.1-3                                    arm64        Netfilter netlink library
+ii  libntfs-3g88                                       1:2017.3.23-2ubuntu0.18.04.3               arm64        read/write NTFS driver for FUSE (runtime library)
+ii  libpresage-data                                    0.9.1-2.1ubuntu4                           all          intelligent predictive text entry platform (data files)
+ii  libpresage1v5:arm64                                0.9.1-2.1ubuntu4                           arm64        intelligent predictive text entry platform (shared library)
+ii  librtmp1:arm64                                     2.4+20151223.gitfa8646d.1-1                arm64        toolkit for RTMP streams (shared library)
+ii  libwxgtk3.0-gtk3-0v5:arm64                         3.0.4+dfsg-3                               arm64        wxWidgets Cross-platform C++ GUI toolkit (GTK+ 3 runtime)
+ii  libxtables12:arm64                                 1.6.1-2ubuntu2                             arm64        netfilter xtables library
+ii  nodejs-doc                                         8.10.0~dfsg-2ubuntu0.4                     all          API documentation for Node.js, the javascript platform
+ii  ntfs-3g                                            1:2017.3.23-2ubuntu0.18.04.3               arm64        read/write NTFS driver for FUSE
+ii  presage                                            0.9.1-2.1ubuntu4                           arm64        intelligent predictive text entry platform (tools and demos)
+ii  python-colorama                                    0.3.7-1                                    all          Cross-platform colored terminal text in Python - Python 2.x
+ii  python-lazr.restfulclient                          0.13.5-1                                   all          client for lazr.restful-based web services
+ii  python-wxgtk3.0                                    3.0.2.0+dfsg-7                             arm64        Python interface to the wxWidgets Cross-platform C++ GUI toolkit
+ii  python3-colorama                                   0.3.7-1                                    all          Cross-platform colored terminal text in Python - Python 3.x
+ii  python3-lazr.restfulclient                         0.13.5-1                                   all          client for lazr.restful-based web services (Python 3)
+ii  qt5-gtk-platformtheme:arm64                        5.9.5+dfsg-0ubuntu2.6                      arm64        Qt 5 GTK+ 3 platform theme
+ii  ros-melodic-actionlib                              1.12.1-1bionic.20210922.013043             arm64        The actionlib stack provides a standardized interface for interfacing with preemptable tasks.
+ii  ros-melodic-actionlib-msgs                         1.12.8-1bionic.20210505.075256             arm64        actionlib_msgs defines the common messages to interact with an action server and an action client.
+ii  ros-melodic-actionlib-tutorials                    0.1.11-0bionic.20210922.013526             arm64        The actionlib_tutorials package
+ii  ros-melodic-amcl                                   1.16.7-1bionic.20210922.033607             arm64        amcl is a probabilistic localization system for a robot moving in 2D.
+ii  ros-melodic-angles                                 1.9.12-1bionic.20201019.180702             arm64        This package provides a set of simple math utilities to work with angles.
+ii  ros-melodic-ar-track-alvar                         0.7.1-0bionic.20221025.230851              arm64        This package is a ROS wrapper for Alvar, an open source AR tag tracking library.
+ii  ros-melodic-ar-track-alvar-msgs                    0.7.1-0bionic.20210505.113058              arm64        This package is a ROS wrapper for Alvar, an open source AR tag tracking library.
+ii  ros-melodic-arbotix                                0.10.0-0bionic.20210922.065151             arm64        ArbotiX Drivers
+ii  ros-melodic-arbotix-controllers                    0.10.0-0bionic.20210922.064008             arm64        Extends the arbotix_python package with a number of more sophisticated ROS wrappers for common devices.
+ii  ros-melodic-arbotix-firmware                       0.10.0-0bionic.20200802.113204             arm64        Firmware source code for ArbotiX ROS bindings.
+ii  ros-melodic-arbotix-msgs                           0.10.0-0bionic.20210505.075409             arm64        Messages and Services definitions for the ArbotiX.
+ii  ros-melodic-arbotix-python                         0.10.0-0bionic.20210922.042055             arm64        Bindings and low-level controllers for ArbotiX-powered robots.
+ii  ros-melodic-arbotix-sensors                        0.10.0-0bionic.20210922.065112             arm64        Extends the arbotix_node package with a number of more sophisticated ROS wrappers for common devices.
+ii  ros-melodic-async-web-server-cpp                   1.0.3-1bionic.20210922.005019              arm64        Asynchronous Web/WebSocket Server in C++
+ii  ros-melodic-base-local-planner                     1.16.7-1bionic.20210922.052923             arm64        This package provides implementations of the Trajectory Rollout and Dynamic Window approaches to local robot navigation on a plane.
+ii  ros-melodic-bfl                                    0.8.0-1bionic.20221025.181726              arm64        This package contains a recent version of the Bayesian Filtering Library (BFL), distributed by the Orocos Project.
+ii  ros-melodic-bond                                   1.8.5-1bionic.20210505.075753              arm64        A bond allows two processes, A and B, to know when the other has terminated, either cleanly or by crashing.
+ii  ros-melodic-bond-core                              1.8.5-1bionic.20210922.011141              arm64        A bond allows two processes, A and B, to know when the other has terminated, either cleanly or by crashing.
+ii  ros-melodic-bondcpp                                1.8.5-1bionic.20210921.232209              arm64        C++ implementation of bond, a mechanism for checking when another process has terminated.
+ii  ros-melodic-bondpy                                 1.8.5-1bionic.20210921.234655              arm64        Python implementation of bond, a mechanism for checking when another process has terminated.
+ii  ros-melodic-camera-calibration                     1.15.2-1bionic.20221025.223849             arm64        camera_calibration allows easy calibration of monocular or stereo cameras using a checkerboard calibration target.
+ii  ros-melodic-camera-calibration-parsers             1.11.13-0bionic.20210922.040803            arm64        camera_calibration_parsers contains routines for reading and writing camera calibration parameters.
+ii  ros-melodic-camera-info-manager                    1.11.13-0bionic.20210922.041103            arm64        This package provides a C++ interface for camera calibration information.
+ii  ros-melodic-carrot-planner                         1.16.7-1bionic.20210922.053455             arm64        This planner attempts to find a legal place to put a carrot for the robot to follow.
+ii  ros-melodic-cartographer                           1.0.0-0bionic.20200802.063543              arm64        Cartographer is a system that provides real-time simultaneous localization and mapping (SLAM) in 2D and 3D across multiple platforms and sensor configurations.
+ii  ros-melodic-cartographer-dbgsym                    1.0.0-0bionic.20200802.063543              arm64        debug symbols for ros-melodic-cartographer
+ii  ros-melodic-cartographer-ros                       1.0.0-1bionic.20221025.224527              arm64        Cartographer is a system that provides real-time simultaneous localization and mapping (SLAM) in 2D and 3D across multiple platforms and sensor configurations.
+ii  ros-melodic-cartographer-ros-dbgsym                1.0.0-1bionic.20221025.224527              arm64        debug symbols for ros-melodic-cartographer-ros
+ii  ros-melodic-cartographer-ros-msgs                  1.0.0-1bionic.20221025.180621              arm64        ROS messages for the cartographer_ros package.
+ii  ros-melodic-cartographer-rviz                      1.0.0-1bionic.20230330.125934              arm64        Cartographer is a system that provides real-time simultaneous localization and mapping (SLAM) in 2D and 3D across multiple platforms and sensor configurations.
+ii  ros-melodic-cartographer-rviz-dbgsym               1.0.0-1bionic.20230330.125934              arm64        debug symbols for ros-melodic-cartographer-rviz
+ii  ros-melodic-catkin                                 0.7.29-1bionic.20201014.191647             arm64        Low-level build system macros and infrastructure for ROS.
+ii  ros-melodic-chomp-motion-planner                   1.0.8-1bionic.20210922.055135              arm64        chomp_motion_planner
+ii  ros-melodic-class-loader                           0.4.1-0bionic.20200802.114445              arm64        The class_loader package is a ROS-independent package for loading plugins during runtime and the foundation of the higher level ROS &quot;pluginlib&quot; library.
+ii  ros-melodic-clear-costmap-recovery                 1.16.7-1bionic.20210922.052925             arm64        This package provides a recovery behavior for the navigation stack that attempts to clear space by reverting the costmaps used by the navigation stack to the static map outside of a given area.
+ii  ros-melodic-cmake-modules                          0.4.2-0bionic.20200802.113658              arm64        A common repository for CMake Modules which are not distributed with CMake but are commonly used by ROS packages.
+ii  ros-melodic-common-msgs                            1.12.8-1bionic.20210922.063517             arm64        common_msgs contains messages that are widely used by other ROS packages.
+ii  ros-melodic-common-tutorials                       0.1.11-0bionic.20210922.015859             arm64        Metapackage that contains common tutorials
+ii  ros-melodic-compressed-depth-image-transport       1.9.5-0bionic.20210922.044627              arm64        Compressed_depth_image_transport provides a plugin to image_transport for transparently sending depth images (raw, floating-point) using PNG compression.
+ii  ros-melodic-compressed-image-transport             1.9.5-0bionic.20210922.044630              arm64        Compressed_image_transport provides a plugin to image_transport for transparently sending images encoded as JPEG or PNG.
+ii  ros-melodic-control-msgs                           1.5.1-1bionic.20210505.130217              arm64        control_msgs contains base messages and actions useful for controlling robots.
+ii  ros-melodic-control-toolbox                        1.18.2-1bionic.20210922.014238             arm64        The control toolbox contains modules that are useful across all controllers.
+ii  ros-melodic-controller-interface                   0.18.4-1bionic.20210921.232548             arm64        Interface base class for controllers.
+ii  ros-melodic-controller-manager                     0.18.4-1bionic.20210922.015356             arm64        The controller manager.
+ii  ros-melodic-controller-manager-msgs                0.18.4-1bionic.20210922.015311             arm64        Messages and services for the controller manager.
+ii  ros-melodic-costmap-2d                             1.16.7-1bionic.20210922.051212             arm64        This package provides an implementation of a 2D costmap that takes in sensor data from the world, builds a 2D or 3D occupancy grid of the data (depending on whether a voxel based implementation is used), and inflates costs in a 2D costmap based on the occupancy grid and a user specified inflation radius.
+ii  ros-melodic-costmap-converter                      0.0.12-1bionic.20210922.051905             arm64        A ros package that includes plugins and nodes to convert occupied costmap2d cells to primitive types.
+ii  ros-melodic-cpp-common                             0.6.14-1bionic.20200801.064627             arm64        cpp_common contains C++ code for doing things that are not necessarily ROS related, but are useful for multiple packages.
+ii  ros-melodic-cv-bridge                              1.13.0-0bionic.20210922.043103             arm64        This contains CvBridge, which converts between ROS Image messages and OpenCV images.
+ii  ros-melodic-depth-image-proc                       1.15.0-1bionic.20210922.062813             arm64        Contains nodelets for processing depth images such as those produced by OpenNI camera.
+ii  ros-melodic-depthimage-to-laserscan                1.0.8-0bionic.20210922.051344              arm64        depthimage_to_laserscan
+ii  ros-melodic-desktop                                1.4.1-0bionic.20210922.071026              arm64        A metapackage to aggregate several packages.
+ii  ros-melodic-desktop-full                           1.4.1-0bionic.20210922.071544              arm64        A metapackage to aggregate several packages.
+ii  ros-melodic-diagnostic-aggregator                  1.9.7-1bionic.20210921.235615              arm64        diagnostic_aggregator
+ii  ros-melodic-diagnostic-analysis                    1.9.7-1bionic.20210922.012656              arm64        The diagnostic_analysis package can convert a log of diagnostics data into a series of CSV files.
+ii  ros-melodic-diagnostic-common-diagnostics          1.9.7-1bionic.20210922.042219              arm64        diagnostic_common_diagnostics
+ii  ros-melodic-diagnostic-msgs                        1.12.8-1bionic.20210505.080053             arm64        This package holds the diagnostic messages which provide the standardized interface for the diagnostic and runtime monitoring systems in ROS.
+ii  ros-melodic-diagnostic-updater                     1.9.7-1bionic.20210921.235641              arm64        diagnostic_updater contains tools for easily updating diagnostics.
+ii  ros-melodic-diagnostics                            1.9.7-1bionic.20210922.044224              arm64        diagnostics
+ii  ros-melodic-diff-drive-controller                  0.17.2-1bionic.20210922.043054             arm64        Controller for a differential drive mobile base.
+ii  ros-melodic-dwa-local-planner                      1.16.7-1bionic.20210922.053504             arm64        This package provides an implementation of the Dynamic Window Approach to local robot navigation on a plane.
+ii  ros-melodic-dynamic-reconfigure                    1.6.3-1bionic.20210922.013045              arm64        The dynamic_reconfigure package provides a means to update parameters at runtime without having to restart the node.
+ii  ros-melodic-ecl-build                              0.61.8-1bionic.20200802.050549             arm64        Collection of cmake/make build tools primarily for ecl development itself, but also contains a few cmake modules useful outside of the ecl.
+ii  ros-melodic-ecl-concepts                           0.62.2-0bionic.20200802.104611             arm64        Introduces a compile time concept checking mechanism that can be used most commonly to check for required functionality when passing template arguments.
+ii  ros-melodic-ecl-config                             0.61.6-0bionic.20200802.063202             arm64        These tools inspect and describe your system with macros, types and functions.
+ii  ros-melodic-ecl-converters                         0.62.2-0bionic.20200802.111815             arm64        Some fast/convenient type converters, mostly for char strings or strings.
+ii  ros-melodic-ecl-eigen                              0.62.2-0bionic.20200802.114311             arm64        This provides an Eigen implementation for ecl's linear algebra.
+ii  ros-melodic-ecl-errors                             0.61.6-0bionic.20200802.064212             arm64        This library provides lean and mean error mechanisms.
+ii  ros-melodic-ecl-exceptions                         0.62.2-0bionic.20200802.103325             arm64        Template based exceptions - these are simple and practical and avoid the proliferation of exception types.
+ii  ros-melodic-ecl-formatters                         0.62.2-0bionic.20200802.112932             arm64        The formatters here simply format various input types to a specified text format.
+ii  ros-melodic-ecl-license                            0.61.8-1bionic.20200802.050116             arm64        Maintains the ecl licenses and also provides an install target for deploying licenses with the ecl libraries.
+ii  ros-melodic-ecl-linear-algebra                     0.62.2-0bionic.20200802.115226             arm64        Ecl frontend to a linear matrix package (currently eigen).
+ii  ros-melodic-ecl-math                               0.62.2-0bionic.20200802.104701             arm64        This package provides simple support to cmath, filling in holes or redefining in a c++ formulation where desirable.
+ii  ros-melodic-ecl-mpl                                0.62.2-0bionic.20200802.050714             arm64        Metaprogramming tools move alot of runtime calculations to be shifted to compile time.
+ii  ros-melodic-ecl-type-traits                        0.62.2-0bionic.20200802.103445             arm64        Extends c++ type traits and implements a few more to boot.
+ii  ros-melodic-eigen-conversions                      1.12.1-1bionic.20210505.102423             arm64        Conversion functions between: - Eigen and KDL - Eigen and geometry_msgs.
+ii  ros-melodic-eigen-stl-containers                   0.1.8-0bionic.20200802.114352              arm64        This package provides a set of typedef's that allow using Eigen datatypes in STL containers
+ii  ros-melodic-eigenpy                                2.6.8-1bionic.20210907.141406              arm64        Bindings between Numpy and Eigen using Boost.Python
+ii  ros-melodic-executive-smach                        2.0.1-0bionic.20210922.045505              arm64        This metapackage depends on the SMACH library and ROS SMACH integration packages.
+ii  ros-melodic-fake-localization                      1.16.7-1bionic.20210922.015933             arm64        A ROS node that simply forwards odometry information.
+ii  ros-melodic-filters                                1.8.1-0bionic.20210921.235642              arm64        This library provides a standardized interface for processing data as a sequence of filters.
+ii  ros-melodic-find-object-2d                         0.6.2-1bionic.20210922.043457              arm64        The find_object_2d package
+ii  ros-melodic-forward-command-controller             0.17.2-1bionic.20210922.020114             arm64        forward_command_controller
+ii  ros-melodic-gazebo-dev                             2.8.7-1bionic.20200802.050431              arm64        Provides a cmake config for the default version of Gazebo for the ROS distribution.
+ii  ros-melodic-gazebo-msgs                            2.8.7-1bionic.20210922.050749              arm64        Message and service data structures for interacting with Gazebo from ROS.
+ii  ros-melodic-gazebo-plugins                         2.8.7-1bionic.20210922.051641              arm64        Robot-independent Gazebo plugins for sensors, motors and dynamic reconfigurable components.
+ii  ros-melodic-gazebo-ros                             2.8.7-1bionic.20210922.051047              arm64        Provides ROS plugins that offer message and service publishers for interfacing with Gazebo through ROS.
+ii  ros-melodic-gazebo-ros-control                     2.8.7-1bionic.20210922.051628              arm64        gazebo_ros_control
+ii  ros-melodic-gazebo-ros-pkgs                        2.8.7-1bionic.20210922.065616              arm64        Interface for using ROS with the Gazebo simulator.
+ii  ros-melodic-gencpp                                 0.6.5-1bionic.20201019.092233              arm64        C++ ROS message and service generators.
+ii  ros-melodic-geneus                                 2.2.6-0bionic.20201019.092416              arm64        EusLisp ROS message and service generators.
+ii  ros-melodic-genlisp                                0.4.16-0bionic.20201019.092039             arm64        Common-Lisp ROS message and service generators.
+ii  ros-melodic-genmsg                                 0.5.16-1bionic.20201018.180117             arm64        Standalone Python library for generating ROS message and service data structures for various languages.
+ii  ros-melodic-gennodejs                              2.0.1-0bionic.20201019.092723              arm64        Javascript ROS message and service generators.
+ii  ros-melodic-genpy                                  0.6.16-1bionic.20210505.005105             arm64        Python ROS message and service generators.
+ii  ros-melodic-geographic-msgs                        0.5.3-0bionic.20210505.100037              arm64        ROS messages for Geographic Information Systems.
+ii  ros-melodic-geometric-shapes                       0.6.4-1bionic.20210519.201039              arm64        Generic definitions of geometric shapes and bodies.
+ii  ros-melodic-geometry                               1.12.1-1bionic.20210922.064941             arm64        A metapackage for geometry library suite.
+ii  ros-melodic-geometry-msgs                          1.12.8-1bionic.20210505.083713             arm64        geometry_msgs provides messages for common geometric primitives such as points, vectors, and poses.
+ii  ros-melodic-geometry-tutorials                     0.2.2-0bionic.20210922.045427              arm64        Metapackage of geometry tutorials ROS.
+ii  ros-melodic-gl-dependency                          1.1.0-0bionic.20200802.113711              arm64        This encapsulates the GL dependency for a specific ROS distribution and its Qt version
+ii  ros-melodic-global-planner                         1.16.7-1bionic.20210922.053421             arm64        A path planner library and node.
+ii  ros-melodic-gmapping                               1.4.1-1bionic.20210922.034339              arm64        This package contains a ROS wrapper for OpenSlam's Gmapping.
+ii  ros-melodic-graph-msgs                             0.1.0-1bionic.20210505.092216              arm64        ROS messages for publishing graphs of different data types
+ii  ros-melodic-hardware-interface                     0.18.4-1bionic.20210921.232321             arm64        Hardware Interface base class.
+
+==================== 3. USB / SERIAL DEVICES =================
+/dev video devices:
+crwxrwxrwx+ 1 root video 81, 0 Aug 26  2021 /dev/video0
+
+/dev ttyUSB / ttyACM:
+crwxrwxrwx 1 root dialout 188, 0 Apr 27 11:56 /dev/ttyUSB0
+crwxrwxrwx 1 root dialout 188, 1 Aug 26  2021 /dev/ttyUSB1
+No ttyUSB/ttyACM devices
+
+USB devices:
+Bus 002 Device 002: ID 2109:0817 VIA Labs, Inc. 
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 001 Device 003: ID 0bda:c822 Realtek Semiconductor Corp. 
+Bus 001 Device 007: ID 8644:8008 Intenso GmbG 
+Bus 001 Device 013: ID 04e8:6864 Samsung Electronics Co., Ltd GT-I9070 (network tethering, USB debugging enabled)
+Bus 001 Device 011: ID 0079:181c DragonRise Inc. 
+Bus 001 Device 009: ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial adapter
+Bus 001 Device 008: ID 24ae:2013  
+Bus 001 Device 006: ID 214b:7250  
+Bus 001 Device 005: ID 05a3:9230 ARC International 
+Bus 001 Device 004: ID 10c4:ea60 Cygnal Integrated Products, Inc. CP210x UART Bridge / myAVR mySmartUSB light
+Bus 001 Device 002: ID 2109:2817 VIA Labs, Inc. 
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+
+Recent kernel messages for USB/serial/video/LiDAR:
+[ 1817.488403] usb 1-2.3.4: new high-speed USB device number 12 using tegra-xusb
+[ 1817.511188] usb 1-2.3.4: New USB device found, idVendor=04e8, idProduct=6860
+[ 1817.511194] usb 1-2.3.4: New USB device strings: Mfr=7, Product=8, SerialNumber=9
+[ 1817.511197] usb 1-2.3.4: Product: SAMSUNG_Android
+[ 1817.511200] usb 1-2.3.4: Manufacturer: SAMSUNG
+[ 1817.511203] usb 1-2.3.4: SerialNumber: RF8RA0D3XAZ
+[ 1817.569516] cdc_acm 1-2.3.4:1.1: ttyACM0: USB ACM device
+[ 1817.588597] usbcore: registered new interface driver cdc_acm
+[ 1817.588601] cdc_acm: USB Abstract Control Model driver for USB modems and ISDN adapters
+[ 1825.460741] usb 1-2.3.4: USB disconnect, device number 12
+[ 1826.200108] usb 1-2.3.4: new high-speed USB device number 13 using tegra-xusb
+[ 1826.223712] usb 1-2.3.4: New USB device found, idVendor=04e8, idProduct=6864
+[ 1826.223718] usb 1-2.3.4: New USB device strings: Mfr=7, Product=8, SerialNumber=9
+[ 1826.223722] usb 1-2.3.4: Product: SAMSUNG_Android
+[ 1826.223726] usb 1-2.3.4: Manufacturer: SAMSUNG
+[ 1826.223729] usb 1-2.3.4: SerialNumber: RF8RA0D3XAZ
+[ 1826.304999] rndis_host 1-2.3.4:1.0 usb1: register 'rndis_host' at usb-70090000.xusb-2.3.4, RNDIS device, ca:8f:5e:22:48:00
+[ 1826.305400] usbcore: registered new interface driver rndis_host
+[ 1826.367763] IPv6: ADDRCONF(NETDEV_UP): usb1: link is not ready
+[ 1928.051737] usb 1-2.2: usb_suspend_both: status 0
+
+==================== 4. CAMERA INFORMATION ===================
+v4l2 camera info:
+USB 2.0 Camera (usb-70090000.xusb-2.2):
+	/dev/video0
+
+
+---- /dev/video0 ----
+Driver Info (not using libv4l2):
+	Driver name   : uvcvideo
+	Card type     : USB 2.0 Camera
+	Bus info      : usb-70090000.xusb-2.2
+	Driver version: 4.9.201
+	Capabilities  : 0x84200001
+		Video Capture
+		Streaming
+		Extended Pix Format
+		Device Capabilities
+	Device Caps   : 0x04200001
+		Video Capture
+		Streaming
+		Extended Pix Format
+Priority: 2
+Video input : 0 (Camera 1: ok)
+Format Video Capture:
+	Width/Height      : 1280/720
+	Pixel Format      : 'MJPG'
+	Field             : None
+	Bytes per Line    : 0
+	Size Image        : 1843789
+	Colorspace        : sRGB
+	Transfer Function : Default (maps to sRGB)
+	YCbCr/HSV Encoding: Default (maps to ITU-R 601)
+	Quantization      : Default (maps to Full Range)
+	Flags             : 
+Crop Capability Video Capture:
+	Bounds      : Left 0, Top 0, Width 1280, Height 720
+	Default     : Left 0, Top 0, Width 1280, Height 720
+	Pixel Aspect: 1/1
+Selection: crop_default, Left 0, Top 0, Width 1280, Height 720
+Selection: crop_bounds, Left 0, Top 0, Width 1280, Height 720
+Streaming Parameters Video Capture:
+	Capabilities     : timeperframe
+	Frames per second: 60.000 (60/1)
+	Read buffers     : 0
+error 5 getting ctrl Brightness
+error 5 getting ctrl Contrast
+                     saturation 0x00980902 (int)    : min=0 max=128 step=1 default=60 value=60
+                            hue 0x00980903 (int)    : min=-40 max=40 step=1 default=0 value=0
+ white_balance_temperature_auto 0x0098090c (bool)   : default=1 value=1
+                          gamma 0x00980910 (int)    : min=72 max=500 step=1 default=100 value=100
+                           gain 0x00980913 (int)    : min=0 max=100 step=1 default=0 value=0
+           power_line_frequency 0x00980918 (menu)   : min=0 max=2 default=1 value=1
+      white_balance_temperature 0x0098091a (int)    : min=2800 max=6500 step=1 default=4600 value=4600 flags=inactive
+                      sharpness 0x0098091b (int)    : min=0 max=6 step=1 default=2 value=2
+         backlight_compensation 0x0098091c (int)    : min=0 max=2 step=1 default=1 value=1
+                  exposure_auto 0x009a0901 (menu)   : min=0 max=3 default=3 value=3
+              exposure_absolute 0x009a0902 (int)    : min=1 max=5000 step=1 default=157 value=157 flags=inactive
+         exposure_auto_priority 0x009a0903 (bool)   : default=0 value=1
+
+ioctl: VIDIOC_ENUM_FMT
+	Index       : 0
+	Type        : Video Capture
+	Pixel Format: 'MJPG' (compressed)
+	Name        : Motion-JPEG
+		Size: Discrete 1280x720
+			Interval: Discrete 0.017s (60.000 fps)
+		Size: Discrete 1920x1080
+			Interval: Discrete 0.033s (30.000 fps)
+		Size: Discrete 1024x768
+			Interval: Discrete 0.033s (30.000 fps)
+		Size: Discrete 640x480
+			Interval: Discrete 0.008s (120.101 fps)
+		Size: Discrete 800x600
+			Interval: Discrete 0.017s (60.000 fps)
+		Size: Discrete 1280x1024
+			Interval: Discrete 0.033s (30.000 fps)
+		Size: Discrete 320x240
+			Interval: Discrete 0.008s (120.101 fps)
+
+	Index       : 1
+	Type        : Video Capture
+	Pixel Format: 'YUYV'
+	Name        : YUYV 4:2:2
+		Size: Discrete 1280x720
+			Interval: Discrete 0.111s (9.000 fps)
+		Size: Discrete 1920x1080
+			Interval: Discrete 0.167s (6.000 fps)
+		Size: Discrete 1024x768
+			Interval: Discrete 0.167s (6.000 fps)
+		Size: Discrete 640x480
+			Interval: Discrete 0.033s (30.000 fps)
+		Size: Discrete 800x600
+			Interval: Discrete 0.050s (20.000 fps)
+		Size: Discrete 1280x1024
+			Interval: Discrete 0.167s (6.000 fps)
+		Size: Discrete 320x240
+			Interval: Discrete 0.033s (30.000 fps)
+
+
+==================== 5. ROS NODES ============================
+ROS nodes:
+/DeviceSrv
+/apply_calib
+/base_link_to_imu_link
+/base_node
+/ekf_localization
+/imu_filter_madgwick
+/joint_state_publisher
+/joy_node
+/metal_detector_coverage
+/metal_serial_mapper
+/robot_state_publisher
+/rosout
+/rplidarNode
+/save_map
+/slam_gmapping
+/transbot_joy
+/transbot_node
+/world_canvas_server
+
+ROS node info:
+
+---- NODE: /DeviceSrv ----
+--------------------------------------------------------------------------------
+Node [/DeviceSrv]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: None
+
+Services: 
+ * /CamDevice
+ * /DeviceSrv/get_loggers
+ * /DeviceSrv/set_logger_level
+
+
+contacting node http://localhost:33389/ ...
+Pid: 17836
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (37467 - 127.0.0.1:40206) [7]
+    * transport: TCPROS
+
+
+---- NODE: /apply_calib ----
+--------------------------------------------------------------------------------
+Node [/apply_calib]
+Publications: 
+ * /imu/data_raw [sensor_msgs/Imu]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /transbot/imu [sensor_msgs/Imu]
+
+Services: 
+ * /apply_calib/get_loggers
+ * /apply_calib/set_logger_level
+
+
+contacting node http://localhost:46069/ ...
+Pid: 17840
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (46887 - 127.0.0.1:52692) [11]
+    * transport: TCPROS
+ * topic: /imu/data_raw
+    * to: /imu_filter_madgwick
+    * direction: outbound (46887 - 127.0.0.1:53050) [12]
+    * transport: TCPROS
+ * topic: /transbot/imu
+    * to: /transbot_node (http://localhost:35721/)
+    * direction: inbound (54380 - localhost:43383) [14]
+    * transport: TCPROS
+
+
+---- NODE: /base_link_to_imu_link ----
+--------------------------------------------------------------------------------
+Node [/base_link_to_imu_link]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+ * /tf [tf2_msgs/TFMessage]
+
+Subscriptions: None
+
+Services: 
+ * /base_link_to_imu_link/get_loggers
+ * /base_link_to_imu_link/set_logger_level
+
+
+contacting node http://localhost:35919/ ...
+Pid: 17842
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (46575 - 127.0.0.1:56880) [11]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound (46575 - 127.0.0.1:57074) [12]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound (46575 - 127.0.0.1:57764) [13]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (46575 - 127.0.0.1:58010) [10]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (46575 - 127.0.0.1:58160) [14]
+    * transport: TCPROS
+
+
+---- NODE: /base_node ----
+--------------------------------------------------------------------------------
+Node [/base_node]
+Publications: 
+ * /odom_raw [nav_msgs/Odometry]
+ * /rosout [rosgraph_msgs/Log]
+ * /tf [tf2_msgs/TFMessage]
+
+Subscriptions: 
+ * /transbot/get_vel [geometry_msgs/Twist]
+
+Services: 
+ * /base_node/get_loggers
+ * /base_node/set_logger_level
+
+
+contacting node http://localhost:45327/ ...
+Pid: 17877
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (47741 - 127.0.0.1:59862) [11]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound (47741 - 127.0.0.1:60062) [12]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound (47741 - 127.0.0.1:60754) [16]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (47741 - 127.0.0.1:60988) [14]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (47741 - 127.0.0.1:32906) [17]
+    * transport: TCPROS
+ * topic: /odom_raw
+    * to: /ekf_localization
+    * direction: outbound (47741 - 127.0.0.1:60256) [13]
+    * transport: TCPROS
+ * topic: /transbot/get_vel
+    * to: /transbot_node (http://localhost:35721/)
+    * direction: inbound (54378 - localhost:43383) [15]
+    * transport: TCPROS
+
+
+---- NODE: /ekf_localization ----
+--------------------------------------------------------------------------------
+Node [/ekf_localization]
+Publications: 
+ * /diagnostics [diagnostic_msgs/DiagnosticArray]
+ * /odom [nav_msgs/Odometry]
+ * /rosout [rosgraph_msgs/Log]
+ * /tf [tf2_msgs/TFMessage]
+
+Subscriptions: 
+ * /imu/data [sensor_msgs/Imu]
+ * /odom_raw [nav_msgs/Odometry]
+ * /set_pose [unknown type]
+ * /tf [tf2_msgs/TFMessage]
+ * /tf_static [tf2_msgs/TFMessage]
+
+Services: 
+ * /ekf_localization/enable
+ * /ekf_localization/get_loggers
+ * /ekf_localization/set_logger_level
+ * /set_pose
+
+
+contacting node http://localhost:40827/ ...
+Pid: 17890
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (50239 - 127.0.0.1:44482) [15]
+    * transport: TCPROS
+ * topic: /odom
+    * to: /metal_detector_coverage
+    * direction: outbound (50239 - 127.0.0.1:45608) [24]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound
+    * transport: INTRAPROCESS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound (50239 - 127.0.0.1:45200) [22]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (50239 - 127.0.0.1:45440) [21]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (50239 - 127.0.0.1:45580) [23]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound (58038 - localhost:43921) [10]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound (45644 - localhost:52273) [16]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_link_to_imu_link (http://localhost:35919/)
+    * direction: inbound (57074 - localhost:46575) [17]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound (60062 - localhost:47741) [18]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound
+    * transport: INTRAPROCESS
+ * topic: /tf
+    * to: /slam_gmapping (http://localhost:37401/)
+    * direction: inbound (34628 - localhost:42861) [11]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound (45702 - localhost:52273) [12]
+    * transport: TCPROS
+ * topic: /odom_raw
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound (60256 - localhost:47741) [13]
+
+---- NODE: /imu_filter_madgwick ----
+--------------------------------------------------------------------------------
+Node [/imu_filter_madgwick]
+Publications: 
+ * /imu/data [sensor_msgs/Imu]
+ * /imu_filter_madgwick/parameter_descriptions [dynamic_reconfigure/ConfigDescription]
+ * /imu_filter_madgwick/parameter_updates [dynamic_reconfigure/Config]
+ * /rosout [rosgraph_msgs/Log]
+ * /tf [tf2_msgs/TFMessage]
+
+Subscriptions: 
+ * /imu/data_raw [sensor_msgs/Imu]
+
+Services: 
+ * /imu_filter_madgwick/get_loggers
+ * /imu_filter_madgwick/set_logger_level
+ * /imu_filter_madgwick/set_parameters
+
+
+contacting node http://localhost:36833/ ...
+Pid: 17841
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (43921 - 127.0.0.1:57816) [11]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound (43921 - 127.0.0.1:58038) [12]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound (43921 - 127.0.0.1:58728) [15]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (43921 - 127.0.0.1:58966) [10]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (43921 - 127.0.0.1:59124) [16]
+    * transport: TCPROS
+ * topic: /imu/data
+    * to: /ekf_localization
+    * direction: outbound (43921 - 127.0.0.1:58328) [14]
+    * transport: TCPROS
+ * topic: /imu/data
+    * to: /metal_detector_coverage
+    * direction: outbound (43921 - 127.0.0.1:59144) [17]
+    * transport: TCPROS
+ * topic: /imu/data_raw
+    * to: /apply_calib (http://localhost:46069/)
+    * direction: inbound (53050 - localhost:46887) [13]
+    * transport: TCPROS
+
+
+---- NODE: /joint_state_publisher ----
+--------------------------------------------------------------------------------
+Node [/joint_state_publisher]
+Publications: 
+ * /joint_states [sensor_msgs/JointState]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: None
+
+Services: 
+ * /joint_state_publisher/get_loggers
+ * /joint_state_publisher/set_logger_level
+
+
+contacting node http://localhost:45731/ ...
+Pid: 17838
+Connections:
+ * topic: /joint_states
+    * to: /robot_state_publisher
+    * direction: outbound (45821 - 127.0.0.1:42834) [11]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (45821 - 127.0.0.1:42820) [7]
+    * transport: TCPROS
+
+
+---- NODE: /joy_node ----
+--------------------------------------------------------------------------------
+Node [/joy_node]
+Publications: 
+ * /diagnostics [diagnostic_msgs/DiagnosticArray]
+ * /joy [sensor_msgs/Joy]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /joy/set_feedback [unknown type]
+
+Services: 
+ * /joy_node/get_loggers
+ * /joy_node/set_logger_level
+
+
+contacting node http://localhost:36853/ ...
+Pid: 17898
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (43001 - 127.0.0.1:46528) [11]
+    * transport: TCPROS
+ * topic: /joy
+    * to: /transbot_joy
+    * direction: outbound (43001 - 127.0.0.1:46906) [12]
+    * transport: TCPROS
+
+
+---- NODE: /metal_detector_coverage ----
+--------------------------------------------------------------------------------
+Node [/metal_detector_coverage]
+Publications: 
+ * /TargetAngle [transbot_msgs/Arm]
+ * /cmd_vel [geometry_msgs/Twist]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /imu/data [sensor_msgs/Imu]
+ * /metal_detections [visualization_msgs/MarkerArray]
+ * /odom [nav_msgs/Odometry]
+ * /scan [sensor_msgs/LaserScan]
+ * /tf [tf2_msgs/TFMessage]
+ * /tf_static [tf2_msgs/TFMessage]
+
+Services: 
+ * /metal_detector_coverage/get_loggers
+ * /metal_detector_coverage/set_logger_level
+
+
+contacting node http://localhost:37941/ ...
+Pid: 18833
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (37033 - 127.0.0.1:37450) [30]
+    * transport: TCPROS
+ * topic: /cmd_vel
+    * to: /transbot_node
+    * direction: outbound (37033 - 127.0.0.1:37434) [28]
+    * transport: TCPROS
+ * topic: /TargetAngle
+    * to: /transbot_node
+    * direction: outbound (37033 - 127.0.0.1:37432) [7]
+    * transport: TCPROS
+ * topic: /imu/data
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_link_to_imu_link (http://localhost:35919/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping (http://localhost:37401/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /odom
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /scan
+    * to: /rplidarNode (http://localhost:33471/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /metal_detections
+    * to: /metal_serial_mapper (http://localhost:36623/)
+    * direction: inbound
+    * transport: TCPROS
+
+
+---- NODE: /metal_serial_mapper ----
+--------------------------------------------------------------------------------
+Node [/metal_serial_mapper]
+Publications: 
+ * /metal_detections [visualization_msgs/MarkerArray]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /tf [tf2_msgs/TFMessage]
+ * /tf_static [tf2_msgs/TFMessage]
+
+Services: 
+ * /metal_serial_mapper/get_loggers
+ * /metal_serial_mapper/set_logger_level
+
+
+contacting node http://localhost:36623/ ...
+Pid: 18527
+Connections:
+ * topic: /metal_detections
+    * to: /metal_detector_coverage
+    * direction: outbound (42159 - 127.0.0.1:57066) [17]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (42159 - 127.0.0.1:56910) [7]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_link_to_imu_link (http://localhost:35919/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping (http://localhost:37401/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound
+    * transport: TCPROS
+
+
+---- NODE: /robot_state_publisher ----
+--------------------------------------------------------------------------------
+Node [/robot_state_publisher]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+ * /tf [tf2_msgs/TFMessage]
+ * /tf_static [tf2_msgs/TFMessage]
+
+Subscriptions: 
+ * /joint_states [sensor_msgs/JointState]
+
+Services: 
+ * /robot_state_publisher/get_loggers
+ * /robot_state_publisher/set_logger_level
+
+
+contacting node http://localhost:43909/ ...
+Pid: 17839
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (52273 - 127.0.0.1:45418) [11]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound (52273 - 127.0.0.1:45644) [12]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound (52273 - 127.0.0.1:46334) [17]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (52273 - 127.0.0.1:46566) [18]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (52273 - 127.0.0.1:46722) [19]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /ekf_localization
+    * direction: outbound (52273 - 127.0.0.1:45702) [13]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /slam_gmapping
+    * direction: outbound (52273 - 127.0.0.1:46370) [14]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /metal_serial_mapper
+    * direction: outbound (52273 - 127.0.0.1:46564) [16]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /metal_detector_coverage
+    * direction: outbound (52273 - 127.0.0.1:46750) [20]
+    * transport: TCPROS
+ * topic: /joint_states
+    * to: /joint_state_publisher (http://localhost:45731/)
+    * direction: inbound (42834 - localhost:45821) [15]
+    * transport: TCPROS
+
+
+---- NODE: /rosout ----
+--------------------------------------------------------------------------------
+Node [/rosout]
+Publications: 
+ * /rosout_agg [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /rosout [rosgraph_msgs/Log]
+
+Services: 
+ * /rosout/get_loggers
+ * /rosout/set_logger_level
+
+
+contacting node http://localhost:39479/ ...
+Pid: 17799
+Connections:
+ * topic: /rosout
+    * to: /apply_calib (http://localhost:46069/)
+    * direction: inbound (52692 - localhost:46887) [16]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound (45418 - localhost:52273) [18]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound (57816 - localhost:43921) [19]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound (59862 - localhost:47741) [14]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /base_link_to_imu_link (http://localhost:35919/)
+    * direction: inbound (56880 - localhost:46575) [15]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /joy_node (http://localhost:36853/)
+    * direction: inbound (46528 - localhost:43001) [21]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound (44482 - localhost:50239) [17]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /joint_state_publisher (http://localhost:45731/)
+    * direction: inbound (42820 - localhost:45821) [22]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /transbot_joy (http://localhost:37127/)
+    * direction: inbound (60642 - localhost:40143) [23]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /DeviceSrv (http://localhost:33389/)
+    * direction: inbound (40206 - localhost:37467) [24]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /transbot_node (http://localhost:35721/)
+    * direction: inbound (54366 - localhost:43383) [25]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /rplidarNode (http://localhost:33471/)
+    * direction: inbound (58914 - localhost:36263) [26]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /save_map (http://localhost:45733/)
+    * direction: inbound (59978 - localhost:60793) [28]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /slam_gmapping (http://localhost:37401/)
+    * direction: inbound (34558 - localhost:42861) [29]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /world_canvas_server (http://localhost:36981/)
+    * direction: inbound (34184 - localhost:37603) [27]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /metal_serial_mapper (http://localhost:36623/)
+    * direction: inbound (56910 - localhost:42159) [30]
+    * transport: TCPROS
+
+---- NODE: /rplidarNode ----
+--------------------------------------------------------------------------------
+Node [/rplidarNode]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+ * /scan [sensor_msgs/LaserScan]
+
+Subscriptions: None
+
+Services: 
+ * /rplidarNode/get_loggers
+ * /rplidarNode/set_logger_level
+ * /start_motor
+ * /stop_motor
+
+
+contacting node http://localhost:33471/ ...
+Pid: 18315
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (36263 - 127.0.0.1:58914) [14]
+    * transport: TCPROS
+ * topic: /scan
+    * to: /slam_gmapping
+    * direction: outbound (36263 - 127.0.0.1:59124) [15]
+    * transport: TCPROS
+ * topic: /scan
+    * to: /metal_detector_coverage
+    * direction: outbound (36263 - 127.0.0.1:59446) [13]
+    * transport: TCPROS
+
+
+---- NODE: /save_map ----
+--------------------------------------------------------------------------------
+Node [/save_map]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: None
+
+Services: 
+ * /save_map
+ * /save_map/get_loggers
+ * /save_map/set_logger_level
+
+
+contacting node http://localhost:45733/ ...
+Pid: 18372
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (60793 - 127.0.0.1:59978) [11]
+    * transport: TCPROS
+
+
+---- NODE: /slam_gmapping ----
+--------------------------------------------------------------------------------
+Node [/slam_gmapping]
+Publications: 
+ * /map [nav_msgs/OccupancyGrid]
+ * /map_metadata [nav_msgs/MapMetaData]
+ * /rosout [rosgraph_msgs/Log]
+ * /slam_gmapping/entropy [std_msgs/Float64]
+ * /tf [tf2_msgs/TFMessage]
+
+Subscriptions: 
+ * /scan [sensor_msgs/LaserScan]
+ * /tf [tf2_msgs/TFMessage]
+ * /tf_static [tf2_msgs/TFMessage]
+
+Services: 
+ * /dynamic_map
+ * /slam_gmapping/get_loggers
+ * /slam_gmapping/set_logger_level
+
+
+contacting node http://localhost:37401/ ...
+Pid: 18369
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (42861 - 127.0.0.1:34558) [22]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping
+    * direction: outbound
+    * transport: INTRAPROCESS
+ * topic: /tf
+    * to: /ekf_localization
+    * direction: outbound (42861 - 127.0.0.1:34628) [11]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_serial_mapper
+    * direction: outbound (42861 - 127.0.0.1:34798) [12]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /metal_detector_coverage
+    * direction: outbound (42861 - 127.0.0.1:34960) [14]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /slam_gmapping (http://localhost:37401/)
+    * direction: inbound
+    * transport: INTRAPROCESS
+ * topic: /tf
+    * to: /imu_filter_madgwick (http://localhost:36833/)
+    * direction: inbound (58728 - localhost:43921) [19]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound (46334 - localhost:52273) [20]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_link_to_imu_link (http://localhost:35919/)
+    * direction: inbound (57764 - localhost:46575) [21]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /base_node (http://localhost:45327/)
+    * direction: inbound (60754 - localhost:47741) [23]
+    * transport: TCPROS
+ * topic: /tf
+    * to: /ekf_localization (http://localhost:40827/)
+    * direction: inbound (45200 - localhost:50239) [24]
+    * transport: TCPROS
+ * topic: /tf_static
+    * to: /robot_state_publisher (http://localhost:43909/)
+    * direction: inbound (46370 - localhost:52273) [10]
+    * transport: TCPROS
+ * topic: /scan
+    * to: /rplidarNode (http://localhost:33471/)
+    * direction: inbound (59124 - localhost:36263) [13]
+    * transport: TCPROS
+
+
+---- NODE: /transbot_joy ----
+--------------------------------------------------------------------------------
+Node [/transbot_joy]
+Publications: 
+ * /Adjust [transbot_msgs/Adjust]
+ * /JoyState [transbot_msgs/JoyState]
+ * /PWMServo [transbot_msgs/PWMServo]
+ * /TargetAngle [transbot_msgs/Arm]
+ * /cmd_vel [geometry_msgs/Twist]
+ * /move_base/cancel [actionlib_msgs/GoalID]
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: 
+ * /joy [sensor_msgs/Joy]
+
+Services: 
+ * /transbot_joy/get_loggers
+ * /transbot_joy/set_logger_level
+
+
+contacting node http://localhost:37127/ ...
+Pid: 17912
+Connections:
+ * topic: /Adjust
+    * to: /transbot_node
+    * direction: outbound (40143 - 127.0.0.1:60728) [16]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (40143 - 127.0.0.1:60642) [7]
+    * transport: TCPROS
+ * topic: /TargetAngle
+    * to: /transbot_node
+    * direction: outbound (40143 - 127.0.0.1:60740) [19]
+    * transport: TCPROS
+ * topic: /PWMServo
+    * to: /transbot_node
+    * direction: outbound (40143 - 127.0.0.1:60730) [17]
+    * transport: TCPROS
+ * topic: /cmd_vel
+    * to: /transbot_node
+    * direction: outbound (40143 - 127.0.0.1:60746) [20]
+    * transport: TCPROS
+ * topic: /joy
+    * to: /joy_node (http://localhost:36853/)
+    * direction: inbound
+    * transport: TCPROS
+
+
+---- NODE: /transbot_node ----
+--------------------------------------------------------------------------------
+Node [/transbot_node]
+Publications: 
+ * /edition [transbot_msgs/Edition]
+ * /rosout [rosgraph_msgs/Log]
+ * /transbot/get_vel [geometry_msgs/Twist]
+ * /transbot/imu [sensor_msgs/Imu]
+ * /transbot_node/parameter_descriptions [dynamic_reconfigure/ConfigDescription]
+ * /transbot_node/parameter_updates [dynamic_reconfigure/Config]
+ * /voltage [transbot_msgs/Battery]
+
+Subscriptions: 
+ * /Adjust [transbot_msgs/Adjust]
+ * /PWMServo [transbot_msgs/PWMServo]
+ * /TargetAngle [transbot_msgs/Arm]
+ * /cmd_vel [geometry_msgs/Twist]
+
+Services: 
+ * /Buzzer
+ * /CurrentAngle
+ * /Headlight
+ * /RGBLight
+ * /transbot_node/get_loggers
+ * /transbot_node/set_logger_level
+ * /transbot_node/set_parameters
+
+
+contacting node http://localhost:35721/ ...
+Pid: 17837
+Connections:
+ * topic: /transbot/get_vel
+    * to: /base_node
+    * direction: outbound (43383 - 127.0.0.1:54378) [25]
+    * transport: TCPROS
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (43383 - 127.0.0.1:54366) [7]
+    * transport: TCPROS
+ * topic: /transbot/imu
+    * to: /apply_calib
+    * direction: outbound (43383 - 127.0.0.1:54380) [28]
+    * transport: TCPROS
+ * topic: /PWMServo
+    * to: /transbot_joy (http://localhost:37127/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /Adjust
+    * to: /transbot_joy (http://localhost:37127/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /cmd_vel
+    * to: /transbot_joy (http://localhost:37127/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /cmd_vel
+    * to: /metal_detector_coverage (http://localhost:37941/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /TargetAngle
+    * to: /transbot_joy (http://localhost:37127/)
+    * direction: inbound
+    * transport: TCPROS
+ * topic: /TargetAngle
+    * to: /metal_detector_coverage (http://localhost:37941/)
+    * direction: inbound
+    * transport: TCPROS
+
+
+---- NODE: /world_canvas_server ----
+--------------------------------------------------------------------------------
+Node [/world_canvas_server]
+Publications: 
+ * /rosout [rosgraph_msgs/Log]
+
+Subscriptions: None
+
+Services: 
+ * /world_canvas_server/get_loggers
+ * /world_canvas_server/set_logger_level
+
+
+contacting node http://localhost:36981/ ...
+Pid: 18370
+Connections:
+ * topic: /rosout
+    * to: /rosout
+    * direction: outbound (37603 - 127.0.0.1:34184) [7]
+    * transport: TCPROS
+
+
+==================== 6. ROS TOPICS ===========================
+ROS topics:
+/Adjust
+/JoyState
+/PWMServo
+/TargetAngle
+/cmd_vel
+/diagnostics
+/edition
+/imu/data
+/imu/data_raw
+/imu_filter_madgwick/parameter_descriptions
+/imu_filter_madgwick/parameter_updates
+/joint_states
+/joy
+/joy/set_feedback
+/map
+/map_metadata
+/metal_detections
+/move_base/cancel
+/odom
+/odom_raw
+/rosout
+/rosout_agg
+/scan
+/set_pose
+/slam_gmapping/entropy
+/tf
+/tf_static
+/transbot/get_vel
+/transbot/imu
+/transbot_node/parameter_descriptions
+/transbot_node/parameter_updates
+/voltage
+
+ROS topic types:
+/Adjust : transbot_msgs/Adjust
+/JoyState : transbot_msgs/JoyState
+/PWMServo : transbot_msgs/PWMServo
+/TargetAngle : transbot_msgs/Arm
+/cmd_vel : geometry_msgs/Twist
+/diagnostics : diagnostic_msgs/DiagnosticArray
+/edition : transbot_msgs/Edition
+/imu/data : sensor_msgs/Imu
+/imu/data_raw : sensor_msgs/Imu
+/imu_filter_madgwick/parameter_descriptions : dynamic_reconfigure/ConfigDescription
+/imu_filter_madgwick/parameter_updates : dynamic_reconfigure/Config
+/joint_states : sensor_msgs/JointState
+/joy : sensor_msgs/Joy
+/joy/set_feedback : sensor_msgs/JoyFeedbackArray
+/map : nav_msgs/OccupancyGrid
+/map_metadata : nav_msgs/MapMetaData
+/metal_detections : visualization_msgs/MarkerArray
+/move_base/cancel : actionlib_msgs/GoalID
+/odom : nav_msgs/Odometry
+/odom_raw : nav_msgs/Odometry
+/rosout : rosgraph_msgs/Log
+/rosout_agg : rosgraph_msgs/Log
+/scan : sensor_msgs/LaserScan
+/set_pose : geometry_msgs/PoseWithCovarianceStamped
+/slam_gmapping/entropy : std_msgs/Float64
+/tf : tf2_msgs/TFMessage
+/tf_static : tf2_msgs/TFMessage
+/transbot/get_vel : geometry_msgs/Twist
+/transbot/imu : sensor_msgs/Imu
+/transbot_node/parameter_descriptions : dynamic_reconfigure/ConfigDescription
+/transbot_node/parameter_updates : dynamic_reconfigure/Config
+/voltage : transbot_msgs/Battery
+
+Topic info for important SDP topics:
+
+---- TOPIC: /cmd_vel ----
+Type: geometry_msgs/Twist
+
+Publishers: 
+ * /transbot_joy (http://localhost:37127/)
+ * /metal_detector_coverage (http://localhost:37941/)
+
+Subscribers: 
+ * /transbot_node (http://localhost:35721/)
+
+
+
+---- TOPIC: /odom ----
+Type: nav_msgs/Odometry
+
+Publishers: 
+ * /ekf_localization (http://localhost:40827/)
+
+Subscribers: 
+ * /metal_detector_coverage (http://localhost:37941/)
+
+
+
+---- TOPIC: /imu/data ----
+Type: sensor_msgs/Imu
+
+Publishers: 
+ * /imu_filter_madgwick (http://localhost:36833/)
+
+Subscribers: 
+ * /ekf_localization (http://localhost:40827/)
+ * /metal_detector_coverage (http://localhost:37941/)
+
+
+
+---- TOPIC: /scan ----
+Type: sensor_msgs/LaserScan
+
+Publishers: 
+ * /rplidarNode (http://localhost:33471/)
+
+Subscribers: 
+ * /slam_gmapping (http://localhost:37401/)
+ * /metal_detector_coverage (http://localhost:37941/)
+
+
+
+---- TOPIC: /metal_detections ----
+Type: visualization_msgs/MarkerArray
+
+Publishers: 
+ * /metal_serial_mapper (http://localhost:36623/)
+
+Subscribers: 
+ * /metal_detector_coverage (http://localhost:37941/)
+
+
+
+---- TOPIC: /TargetAngle ----
+Type: transbot_msgs/Arm
+
+Publishers: 
+ * /transbot_joy (http://localhost:37127/)
+ * /metal_detector_coverage (http://localhost:37941/)
+
+Subscribers: 
+ * /transbot_node (http://localhost:35721/)
+
+
+
+---- TOPIC: /PWMServo ----
+Type: transbot_msgs/PWMServo
+
+Publishers: 
+ * /transbot_joy (http://localhost:37127/)
+
+Subscribers: 
+ * /transbot_node (http://localhost:35721/)
+
+
+
+---- TOPIC: /servo_control ----
+Topic not found
+
+---- TOPIC: /usb_cam/image_raw ----
+Topic not found
+
+---- TOPIC: /camera/image_raw ----
+Topic not found
+
+==================== 7. TOPIC FREQUENCIES ====================
+
+---- HZ: /odom ----
+subscribed to [/odom]
+average rate: 19.954
+	min: 0.045s max: 0.055s std dev: 0.00204s window: 19
+average rate: 19.913
+	min: 0.045s max: 0.055s std dev: 0.00159s window: 39
+average rate: 19.945
+	min: 0.045s max: 0.055s std dev: 0.00151s window: 59
+average rate: 19.940
+	min: 0.045s max: 0.056s std dev: 0.00170s window: 79
+average rate: 19.945
+	min: 0.045s max: 0.056s std dev: 0.00164s window: 87
+Could not measure /odom
+
+---- HZ: /imu/data ----
+subscribed to [/imu/data]
+average rate: 19.621
+	min: 0.050s max: 0.052s std dev: 0.00061s window: 19
+average rate: 19.617
+	min: 0.050s max: 0.052s std dev: 0.00068s window: 38
+average rate: 19.595
+	min: 0.049s max: 0.055s std dev: 0.00086s window: 58
+average rate: 19.606
+	min: 0.049s max: 0.055s std dev: 0.00089s window: 78
+average rate: 19.606
+	min: 0.049s max: 0.055s std dev: 0.00086s window: 97
+average rate: 19.609
+	min: 0.049s max: 0.055s std dev: 0.00086s window: 99
+Could not measure /imu/data
+
+---- HZ: /scan ----
+subscribed to [/scan]
+average rate: 6.665
+	min: 0.145s max: 0.160s std dev: 0.00517s window: 6
+average rate: 6.647
+	min: 0.145s max: 0.160s std dev: 0.00545s window: 13
+average rate: 6.660
+	min: 0.145s max: 0.160s std dev: 0.00526s window: 19
+average rate: 6.674
+	min: 0.144s max: 0.160s std dev: 0.00513s window: 26
+average rate: 6.670
+	min: 0.144s max: 0.160s std dev: 0.00516s window: 30
+Could not measure /scan
+
+---- HZ: /usb_cam/image_raw ----
+WARNING: topic [/usb_cam/image_raw] does not appear to be published yet
+Traceback (most recent call last):
+  File "/opt/ros/melodic/bin/rostopic", line 35, in <module>
+    rostopic.rostopicmain()
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 2132, in rostopicmain
+    _rostopic_cmd_hz(argv)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 1524, in _rostopic_cmd_hz
+    use_wtime=options.use_wtime, tcp_nodelay=options.tcp_nodelay)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 315, in _rostopic_hz
+    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rospy/topics.py", line 563, in __init__
+    super(Subscriber, self).__init__(name, data_class, Registration.SUB)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rospy/topics.py", line 131, in __init__
+    raise ValueError("topic name is not a non-empty string")
+ValueError: topic name is not a non-empty string
+Could not measure /usb_cam/image_raw
+
+---- HZ: /camera/image_raw ----
+WARNING: topic [/camera/image_raw] does not appear to be published yet
+Traceback (most recent call last):
+  File "/opt/ros/melodic/bin/rostopic", line 35, in <module>
+    rostopic.rostopicmain()
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 2132, in rostopicmain
+    _rostopic_cmd_hz(argv)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 1524, in _rostopic_cmd_hz
+    use_wtime=options.use_wtime, tcp_nodelay=options.tcp_nodelay)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rostopic/__init__.py", line 315, in _rostopic_hz
+    rospy.Subscriber(real_topic, rospy.AnyMsg, rt.callback_hz, callback_args=topic, tcp_nodelay=tcp_nodelay)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rospy/topics.py", line 563, in __init__
+    super(Subscriber, self).__init__(name, data_class, Registration.SUB)
+  File "/opt/ros/melodic/lib/python2.7/dist-packages/rospy/topics.py", line 131, in __init__
+    raise ValueError("topic name is not a non-empty string")
+ValueError: topic name is not a non-empty string
+Could not measure /camera/image_raw
+
+---- HZ: /metal_detections ----
+subscribed to [/metal_detections]
+no new messages
+no new messages
+no new messages
+no new messages
+no new messages
+no new messages
+Could not measure /metal_detections
+
+==================== 8. SAMPLE ROS MESSAGES ==================
+
+Sample /odom:
+header: 
+  seq: 9918
+  stamp: 
+    secs: 1777277040
+    nsecs: 360553026
+  frame_id: "odom"
+child_frame_id: "base_footprint"
+pose: 
+  pose: 
+    position: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    orientation: 
+      x: 0.0
+      y: 0.0
+      z: 0.00140412617034
+      w: 0.999999014214
+  covariance: [24.92405095410659, -1.856114670052654e-19, 0.0, 0.0, 0.0, 0.0, 1.707870746563661e-19, 24.92405095410659, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.823976030001827e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.681561509589917e-07, 8.216763309037782e-33, 0.0, 0.0, 0.0, 0.0, -6.52377202466562e-33, 4.681561509589917e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 29.855345565866113]
+twist: 
+  twist: 
+    linear: 
+      x: 0.0
+      y: 0.0
+      z: 0.0
+    angular: 
+      x: 0.0
+      y: 0.0
+      z: -0.00065563465294
+  covariance: [9.866013141652913e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.866013141652913e-05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.749200750717459e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.3084708980431247e-07, -4.034315892547663e-35, 0.0, 0.0, 0.0, 0.0, 1.559559391005575e-35, 4.3084708980431247e-07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.99985541663853e-10]
+---
+
+Sample /imu/data:
+header: 
+  seq: 9690
+  stamp: 
+    secs: 1777277042
+    nsecs: 659953887
+  frame_id: "imu_link"
+orientation: 
+  x: 0.175417401298
+  y: -0.903825585938
+  z: 0.341905740403
+  w: 0.188224626989
+orientation_covariance: [0.0025000000000000005, 0.0, 0.0, 0.0, 0.0025000000000000005, 0.0, 0.0, 0.0, 0.0025000000000000005]
+angular_velocity: 
+  x: -0.0102721284758
+  y: 0.0123771820416
+  z: -0.000656137202565
+angular_velocity_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+linear_acceleration: 
+  x: 0.330728110832
+  y: -1.19637377187
+  z: -1.21546531881
+linear_acceleration_covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+---
+
+Sample /scan metadata:
+Usage: rostopic echo [options] /topic
+
+rostopic: error: you may only specify one input topic
+No /scan metadata sample
+
+Sample /metal_detections:
+No /metal_detections sample
+
+==================== 9. TF / LOCALIZATION ====================
+TF frames:
+Listening to /tf for 5.0 seconds
+Done Listening
+dot - graphviz version 2.40.1 (20161225.0304)
+
+Detected dot version 2.40
+frames.pdf generated
+
+TF echo map -> base_footprint:
+At time 1777277063.119
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.084]
+At time 1777277063.781
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.078]
+At time 1777277064.753
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.085]
+At time 1777277065.778
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.002]
+            in RPY (degree) [0.000, -0.000, 0.086]
+At time 1777277066.794
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.084]
+At time 1777277067.763
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.002]
+            in RPY (degree) [0.000, -0.000, 0.098]
+At time 1777277068.788
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.082]
+No /map -> /base_footprint transform
+
+TF echo odom -> base_footprint:
+At time 1777277071.033
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.072]
+At time 1777277071.800
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.058]
+At time 1777277072.819
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.061]
+At time 1777277073.786
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.060]
+At time 1777277074.801
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.001, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.063]
+At time 1777277075.821
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.046]
+At time 1777277076.737
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.001]
+            in RPY (degree) [0.000, -0.000, 0.047]
+No /odom -> /base_footprint transform
+
+TF echo base_link -> base_footprint:
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+At time 0.000
+- Translation: [0.000, 0.000, -0.080]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+No /base_link -> /base_footprint transform
+
+==================== 10. ROS PARAMETERS ======================
+Relevant ROS params:
+/base_node/is_multi_robot
+/base_node/linear_scale
+/ekf_localization/base_link_frame
+/ekf_localization/frequency
+/ekf_localization/imu0
+/ekf_localization/imu0_config
+/ekf_localization/imu0_differential
+/ekf_localization/imu0_relative
+/ekf_localization/odom0
+/ekf_localization/odom0_config
+/ekf_localization/odom0_differential
+/ekf_localization/odom0_relative
+/ekf_localization/odom_frame
+/ekf_localization/two_d_mode
+/ekf_localization/world_frame
+/imu_filter_madgwick/angular_scale
+/imu_filter_madgwick/fixed_frame
+/imu_filter_madgwick/gain
+/imu_filter_madgwick/mag_bias_x
+/imu_filter_madgwick/mag_bias_y
+/imu_filter_madgwick/mag_bias_z
+/imu_filter_madgwick/orientation_stddev
+/imu_filter_madgwick/publish_tf
+/imu_filter_madgwick/use_mag
+/imu_filter_madgwick/use_magnetic_field_msg
+/imu_filter_madgwick/world_frame
+/imu_filter_madgwick/zeta
+/robot_description
+/rplidarNode/angle_compensate
+/rplidarNode/frame_id
+/rplidarNode/inverted
+/rplidarNode/serial_baudrate
+/rplidarNode/serial_port
+/slam_gmapping/angularUpdate
+/slam_gmapping/astep
+/slam_gmapping/base_frame
+/slam_gmapping/delta
+/slam_gmapping/iterations
+/slam_gmapping/kernelSize
+/slam_gmapping/lasamplerange
+/slam_gmapping/lasamplestep
+/slam_gmapping/linearUpdate
+/slam_gmapping/llsamplerange
+/slam_gmapping/llsamplestep
+/slam_gmapping/lsigma
+/slam_gmapping/lskip
+/slam_gmapping/lstep
+/slam_gmapping/map_frame
+/slam_gmapping/map_update_interval
+/slam_gmapping/maxRange
+/slam_gmapping/maxUrange
+/slam_gmapping/minimumScore
+/slam_gmapping/odom_frame
+/slam_gmapping/ogain
+/slam_gmapping/particles
+/slam_gmapping/resampleThreshold
+/slam_gmapping/sigma
+/slam_gmapping/srr
+/slam_gmapping/srt
+/slam_gmapping/str
+/slam_gmapping/stt
+/slam_gmapping/temporalUpdate
+/slam_gmapping/xmax
+/slam_gmapping/xmin
+/slam_gmapping/ymax
+/slam_gmapping/ymin
+/transbot_joy/angular_speed_limit
+/transbot_joy/linear_speed_limit
+/transbot_node/Kd
+/transbot_node/Ki
+/transbot_node/Kp
+/transbot_node/angular_max
+/transbot_node/angular_min
+/transbot_node/imu
+/transbot_node/linear_max
+/transbot_node/linear_min
+/transbot_node/vel
+
+Selected ROS param values:
+
+---- PARAM: /base_node/is_multi_robot ----
+false
+
+---- PARAM: /base_node/linear_scale ----
+1.2
+
+---- PARAM: /ekf_localization/base_link_frame ----
+base_footprint
+
+---- PARAM: /ekf_localization/frequency ----
+20
+
+---- PARAM: /ekf_localization/imu0 ----
+/imu/data
+
+---- PARAM: /ekf_localization/imu0_config ----
+[false, false, false, false, false, true, false, false, false, false, false, true,
+  false, false, false]
+
+
+---- PARAM: /ekf_localization/imu0_differential ----
+true
+
+---- PARAM: /ekf_localization/imu0_relative ----
+false
+
+---- PARAM: /ekf_localization/odom0 ----
+/odom_raw
+
+---- PARAM: /ekf_localization/odom0_config ----
+[false, false, false, false, false, false, true, true, false, false, false, true,
+  false, false, false]
+
+
+---- PARAM: /ekf_localization/odom0_differential ----
+true
+
+---- PARAM: /ekf_localization/odom0_relative ----
+false
+
+---- PARAM: /ekf_localization/odom_frame ----
+odom
+
+---- PARAM: /ekf_localization/two_d_mode ----
+true
+
+---- PARAM: /ekf_localization/world_frame ----
+odom
+
+---- PARAM: /imu_filter_madgwick/angular_scale ----
+1.08
+
+---- PARAM: /imu_filter_madgwick/fixed_frame ----
+base_link
+
+---- PARAM: /imu_filter_madgwick/gain ----
+0.1
+
+---- PARAM: /imu_filter_madgwick/mag_bias_x ----
+0.0
+
+---- PARAM: /imu_filter_madgwick/mag_bias_y ----
+0.0
+
+---- PARAM: /imu_filter_madgwick/mag_bias_z ----
+0.0
+
+---- PARAM: /imu_filter_madgwick/orientation_stddev ----
+0.05
+
+---- PARAM: /imu_filter_madgwick/publish_tf ----
+false
+
+---- PARAM: /imu_filter_madgwick/use_mag ----
+fasle
+
+---- PARAM: /imu_filter_madgwick/use_magnetic_field_msg ----
+fasle
+
+---- PARAM: /imu_filter_madgwick/world_frame ----
+enu
+
+---- PARAM: /imu_filter_madgwick/zeta ----
+0.0
+
+---- PARAM: /robot_description ----
+"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- ===================================================================================\
+  \ -->\n<!-- |    This document was autogenerated by xacro from /home/jetson/software/transbot_library/src/transbot_description/urdf/transbot_astra.urdf\
+  \ | -->\n<!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                \
+  \                 | -->\n<!-- ===================================================================================\
+  \ -->\n<!-- This URDF was automatically created by SolidWorks to URDF Exporter!\
+  \ Originally created by Stephen Brawner (brawner@gmail.com) \n     Commit Version:\
+  \ 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634\n     For more information, please\
+  \ see http://wiki.ros.org/sw_urdf_exporter -->\n<robot name=\"transbot_description\"\
+  >\n  <link name=\"base_footprint\"/>\n  <link name=\"base_link\">\n    <inertial>\n\
+  \      <origin rpy=\"0 0 0\" xyz=\"-0.011 0.0002 -0.00832\"/>\n      <mass value=\"\
+  1.1011218463245\"/>\n      <inertia ixx=\"0.00683403160871643\" ixy=\"-1.43326126624159E-06\"\
+  \ ixz=\"0.000665507738691208\" iyy=\"0.0091844048006001\" iyz=\"3.7191085325542E-06\"\
+  \ izz=\"0.0114582299070878\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"\
+  0 0 -1.5708\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/base_link.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0 0.7 0\
+  \ 1\"/>\n      </material>\n    </visual>\n    <collision>\n      <origin rpy=\"\
+  0 0 -1.5708\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/base_link.STL\"\
+  />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"base_joint\"\
+  \ type=\"fixed\">\n    <parent link=\"base_footprint\"/>\n    <child link=\"base_link\"\
+  />\n    <origin rpy=\"0 0 0\" xyz=\"0.0 0.0 0.08\"/>\n  </joint>\n  <link name=\"\
+  astra_link\">\n    <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"0.0003 -3.63185E-06\
+  \ -0.01238\"/>\n      <mass value=\"0.249477026881758\"/>\n      <inertia ixx=\"\
+  0.000512759440122099\" ixy=\"3.59531977965561E-08\" ixz=\"-7.77105312830466E-06\"\
+  \ iyy=\"0.000168771991127263\" iyz=\"4.52266817392523E-08\" izz=\"0.000428421579554258\"\
+  />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+  \      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/astra_link.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.7 0.7\
+  \ 0.7 1\"/>\n      </material>\n    </visual>\n    <collision>\n      <origin rpy=\"\
+  0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/astra_link.STL\"\
+  />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"astra_joint\"\
+  \ type=\"revolute\">\n    <origin rpy=\"0 0 0\" xyz=\"0.0484 0 0.10494\"/>\n   \
+  \ <parent link=\"base_link\"/>\n    <child link=\"astra_link\"/>\n    <axis xyz=\"\
+  0 0 1\"/>\n    <limit effort=\"100\" lower=\"-0.52358\" upper=\"0.52358\" velocity=\"\
+  1\"/>\n  </joint>\n  <link name=\"arm\">\n    <inertial>\n      <origin rpy=\"0\
+  \ 0 0\" xyz=\"-0.006174 8.44369E-05 0.0132\"/>\n      <mass value=\"0.067681113134478\"\
+  />\n      <inertia ixx=\"2.68497509518873E-05\" ixy=\"-3.33020165981552E-06\" ixz=\"\
+  -9.65563060195426E-07\" iyy=\"3.51677567732461E-05\" iyz=\"-4.72072757937217E-06\"\
+  \ izz=\"4.4994530861743E-05\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"\
+  0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/arm.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0 0 0 1\"\
+  />\n      </material>\n    </visual>\n    <collision>\n      <origin rpy=\"0 0 0\"\
+  \ xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/arm.STL\"\
+  />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"arm_joint\"\
+  \ type=\"fixed\">\n    <origin rpy=\"-0.7854 0 -1.5708\" xyz=\"0.12925 0 -0.014083\"\
+  />\n    <parent link=\"base_link\"/>\n    <child link=\"arm\"/>\n    <axis xyz=\"\
+  0 0 0\"/>\n  </joint>\n  <link name=\"arm_link1\">\n    <inertial>\n      <origin\
+  \ rpy=\"0 1.5708 0\" xyz=\"-0.00227 0.024777 0.000485\"/>\n      <mass value=\"\
+  0.0315348657457593\"/>\n      <inertia ixx=\"2.62365924906028E-05\" ixy=\"-8.71620806198248E-07\"\
+  \ ixz=\"3.70960358896292E-09\" iyy=\"5.75254728345384E-06\" iyz=\"1.32494709462361E-07\"\
+  \ izz=\"2.43479091390021E-05\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"\
+  0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/arm_link1.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/arm_link1.STL\"/>\n      </geometry>\n   \
+  \ </collision>\n  </link>\n  <joint name=\"arm_joint1\" type=\"revolute\">\n   \
+  \ <origin rpy=\"0 -1.5708 3.14\" xyz=\"0 0.0295 0.0471\"/>\n    <parent link=\"\
+  arm\"/>\n    <child link=\"arm_link1\"/>\n    <axis xyz=\"0 0 1\"/>\n    <limit\
+  \ effort=\"100\" lower=\"-3.927\" upper=\"0\" velocity=\"1\"/>\n  </joint>\n  <link\
+  \ name=\"arm_link2\">\n    <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"-0.012\
+  \ 0.04428 -0.00083\"/>\n      <mass value=\"0.064068284960248\"/>\n      <inertia\
+  \ ixx=\"5.32496834034383E-05\" ixy=\"1.14801087297394E-05\" ixz=\"-7.21376567958445E-07\"\
+  \ iyy=\"1.94399604109465E-05\" iyz=\"1.57043385958373E-06\" izz=\"5.71389111747307E-05\"\
+  />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+  \      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/arm_link2.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0 0.7 0\
+  \ 1\"/>\n      </material>\n    </visual>\n    <collision>\n      <origin rpy=\"\
+  0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/arm_link2.STL\"\
+  />\n      </geometry>\n    </collision>\n  </link>\n  <joint name=\"arm_joint2\"\
+  \ type=\"revolute\">\n    <origin rpy=\"0 0 -2.3562\" xyz=\"0 0.08285 0\"/>\n  \
+  \  <parent link=\"arm_link1\"/>\n    <child link=\"arm_link2\"/>\n    <axis xyz=\"\
+  0 0 1\"/>\n    <limit effort=\"100\" lower=\"-0.2617\" upper=\"3.926875\" velocity=\"\
+  1\"/>\n  </joint>\n  <link name=\"right_link1\">\n    <inertial>\n      <origin\
+  \ rpy=\"0 0 0\" xyz=\"-0.00022 0.0042 0.0001565\"/>\n      <mass value=\"0.00183348845051841\"\
+  />\n      <inertia ixx=\"2.0324777292641E-07\" ixy=\"-8.64022960782153E-09\" ixz=\"\
+  3.40379009885252E-10\" iyy=\"5.15029451291985E-08\" iyz=\"-6.50409742399053E-09\"\
+  \ izz=\"2.47897272989704E-07\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"\
+  0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/right_link1.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/right_link1.STL\"/>\n      </geometry>\n \
+  \   </collision>\n  </link>\n  <joint name=\"Jaws_joint\" type=\"revolute\">\n \
+  \   <origin rpy=\"0 1.5708 0\" xyz=\"0.0045 0.06415 -0.01185\"/>\n    <parent link=\"\
+  arm_link2\"/>\n    <child link=\"right_link1\"/>\n    <axis xyz=\"0 0 1\"/>\n  \
+  \  <limit effort=\"100\" lower=\"-1.6\" upper=\"0\" velocity=\"1\"/>\n  </joint>\n\
+  \  <link name=\"right_link2\">\n    <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"\
+  -0.0062 0.020796 -0.0031\"/>\n      <mass value=\"0.00249011366902266\"/>\n    \
+  \  <inertia ixx=\"6.52013082134657E-07\" ixy=\"1.28158340799434E-07\" ixz=\"1.32545668593733E-09\"\
+  \ iyy=\"5.40527011205097E-08\" iyz=\"-4.44570381398951E-09\" izz=\"6.84401893462913E-07\"\
+  />\n    </inertial>\n    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n\
+  \      <geometry>\n        <mesh filename=\"package://transbot_description/meshes/right_link2.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \  0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n  \
+  \    <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/right_link2.STL\"/>\n      </geometry>\n \
+  \   </collision>\n  </link>\n  <joint name=\"right_joint2\" type=\"continuous\"\
+  >\n    <origin rpy=\"0 0 0\" xyz=\"0.0009 0.03 0\"/>\n    <parent link=\"right_link1\"\
+  />\n    <child link=\"right_link2\"/>\n    <axis xyz=\"0 0 -1\"/>\n    <mimic joint=\"\
+  Jaws_joint\" multiplier=\"1\"/>\n  </joint>\n  <link name=\"right_link3\">\n   \
+  \ <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"6.84923716706099E-05 0.018624 -0.00265\"\
+  />\n      <mass value=\"0.000745\"/>\n      <inertia ixx=\"1.04686918388409E-07\"\
+  \ ixy=\"-3.26477129854809E-10\" ixz=\"1.48779762241015E-11\" iyy=\"1.59187935398975E-08\"\
+  \ iyz=\"4.04566802579487E-09\" izz=\"9.13337951601148E-08\"/>\n    </inertial>\n\
+  \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n \
+  \       <mesh filename=\"package://transbot_description/meshes/right_link3.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/right_link3.STL\"/>\n      </geometry>\n \
+  \   </collision>\n  </link>\n  <joint name=\"right_joint3\" type=\"continuous\"\
+  >\n    <origin rpy=\"0 1.5708 0\" xyz=\"0.0045 0.08215 -0.00395\"/>\n    <parent\
+  \ link=\"arm_link2\"/>\n    <child link=\"right_link3\"/>\n    <axis xyz=\"0 0 1\"\
+  />\n    <mimic joint=\"right_joint2\" multiplier=\"1\"/>\n  </joint>\n  <link name=\"\
+  left_link1\">\n    <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"0.0002688 0.00628852\
+  \ 0.001\"/>\n      <mass value=\"0.00121\"/>\n      <inertia ixx=\"1.69131415914509E-07\"\
+  \ ixy=\"9.14718502533155E-09\" ixz=\"-1.90844103767323E-14\" iyy=\"3.19585470928261E-08\"\
+  \ iyz=\"3.97689754998194E-14\" izz=\"2.00283501063598E-07\"/>\n    </inertial>\n\
+  \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n \
+  \       <mesh filename=\"package://transbot_description/meshes/left_link1.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/left_link1.STL\"/>\n      </geometry>\n  \
+  \  </collision>\n  </link>\n  <joint name=\"left_joint1\" type=\"continuous\">\n\
+  \    <origin rpy=\"0 1.5708 0\" xyz=\"0.0045 0.06415 0.0127\"/>\n    <parent link=\"\
+  arm_link2\"/>\n    <child link=\"left_link1\"/>\n    <axis xyz=\"0 0 1\"/>\n   \
+  \ <mimic joint=\"Jaws_joint\" multiplier=\"-1\"/>\n  </joint>\n  <link name=\"left_link2\"\
+  >\n    <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"0.0062 0.0208 -0.0031\"/>\n\
+  \      <mass value=\"0.00249011366902267\"/>\n      <inertia ixx=\"6.52017871569716E-07\"\
+  \ ixy=\"-1.28147201790302E-07\" ixz=\"-1.325374459077E-09\" iyy=\"5.40479137210298E-08\"\
+  \ iyz=\"-4.44572858127216E-09\" izz=\"6.84401895498491E-07\"/>\n    </inertial>\n\
+  \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n \
+  \       <mesh filename=\"package://transbot_description/meshes/left_link2.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/left_link2.STL\"/>\n      </geometry>\n  \
+  \  </collision>\n  </link>\n  <joint name=\"left_joint2\" type=\"continuous\">\n\
+  \    <origin rpy=\"0 0 0\" xyz=\"-0.00091 0.03 0\"/>\n    <parent link=\"left_link1\"\
+  />\n    <child link=\"left_link2\"/>\n    <axis xyz=\"0 0 1\"/>\n    <mimic joint=\"\
+  left_joint1\" multiplier=\"-1\"/>\n  </joint>\n  <link name=\"left_link3\">\n  \
+  \  <inertial>\n      <origin rpy=\"0 0 0\" xyz=\"8.14319609551461E-05 0.018624 -0.0035\"\
+  />\n      <mass value=\"0.000745\"/>\n      <inertia ixx=\"1.04686410925661E-07\"\
+  \ ixy=\"-3.8815108567023E-10\" ixz=\"1.76885865580073E-11\" iyy=\"1.59192877854819E-08\"\
+  \ iyz=\"4.04566084059286E-09\" izz=\"9.13337860026262E-08\"/>\n    </inertial>\n\
+  \    <visual>\n      <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n \
+  \       <mesh filename=\"package://transbot_description/meshes/left_link3.STL\"\
+  />\n      </geometry>\n      <material name=\"\">\n        <color rgba=\"0.75294\
+  \ 0.75294 0.75294 1\"/>\n      </material>\n    </visual>\n    <collision>\n   \
+  \   <origin rpy=\"0 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <mesh filename=\"\
+  package://transbot_description/meshes/left_link3.STL\"/>\n      </geometry>\n  \
+  \  </collision>\n  </link>\n  <joint name=\"left_joint3\" type=\"continuous\">\n\
+  \    <origin rpy=\"0 1.5708 0\" xyz=\"0.0045 0.08215 0.00505\"/>\n    <parent link=\"\
+  arm_link2\"/>\n    <child link=\"left_link3\"/>\n    <axis xyz=\"0 0 1\"/>\n   \
+  \ <mimic joint=\"left_joint2\" multiplier=\"-1\"/>\n  </joint>\n</robot>\n\n"
+
+
+---- PARAM: /rplidarNode/angle_compensate ----
+true
+
+---- PARAM: /rplidarNode/frame_id ----
+laser
+
+---- PARAM: /rplidarNode/inverted ----
+false
+
+---- PARAM: /rplidarNode/serial_baudrate ----
+115200
+
+---- PARAM: /rplidarNode/serial_port ----
+/dev/ttyUSB0
+
+---- PARAM: /slam_gmapping/angularUpdate ----
+0.3
+
+---- PARAM: /slam_gmapping/astep ----
+0.05
+
+---- PARAM: /slam_gmapping/base_frame ----
+base_footprint
+
+---- PARAM: /slam_gmapping/delta ----
+0.05
+
+---- PARAM: /slam_gmapping/iterations ----
+1
+
+---- PARAM: /slam_gmapping/kernelSize ----
+1
+
+---- PARAM: /slam_gmapping/lasamplerange ----
+0.005
+
+---- PARAM: /slam_gmapping/lasamplestep ----
+0.005
+
+---- PARAM: /slam_gmapping/linearUpdate ----
+0.1
+
+---- PARAM: /slam_gmapping/llsamplerange ----
+0.01
+
+---- PARAM: /slam_gmapping/llsamplestep ----
+0.01
+
+---- PARAM: /slam_gmapping/lsigma ----
+0.075
+
+---- PARAM: /slam_gmapping/lskip ----
+0
+
+---- PARAM: /slam_gmapping/lstep ----
+0.05
+
+---- PARAM: /slam_gmapping/map_frame ----
+map
+
+---- PARAM: /slam_gmapping/map_update_interval ----
+1.0
+
+---- PARAM: /slam_gmapping/maxRange ----
+12.0
+
+---- PARAM: /slam_gmapping/maxUrange ----
+8.0
+
+---- PARAM: /slam_gmapping/minimumScore ----
+50
+
+---- PARAM: /slam_gmapping/odom_frame ----
+odom
+
+---- PARAM: /slam_gmapping/ogain ----
+3.0
+
+---- PARAM: /slam_gmapping/particles ----
+30
+
+---- PARAM: /slam_gmapping/resampleThreshold ----
+0.5
+
+---- PARAM: /slam_gmapping/sigma ----
+0.05
+
+---- PARAM: /slam_gmapping/srr ----
+0.1
+
+---- PARAM: /slam_gmapping/srt ----
+0.2
+
+---- PARAM: /slam_gmapping/str ----
+0.1
+
+---- PARAM: /slam_gmapping/stt ----
+0.2
+
+---- PARAM: /slam_gmapping/temporalUpdate ----
+-1.0
+
+---- PARAM: /slam_gmapping/xmax ----
+20.0
+
+---- PARAM: /slam_gmapping/xmin ----
+-20.0
+
+---- PARAM: /slam_gmapping/ymax ----
+20.0
+
+---- PARAM: /slam_gmapping/ymin ----
+-20.0
+
+---- PARAM: /transbot_joy/angular_speed_limit ----
+2.0
+
+---- PARAM: /transbot_joy/linear_speed_limit ----
+0.45
+
+---- PARAM: /transbot_node/Kd ----
+1.0
+
+---- PARAM: /transbot_node/Ki ----
+0.0
+
+---- PARAM: /transbot_node/Kp ----
+0.1
+
+---- PARAM: /transbot_node/angular_max ----
+2.0
+
+---- PARAM: /transbot_node/angular_min ----
+0.0
+
+---- PARAM: /transbot_node/imu ----
+/transbot/imu
+
+---- PARAM: /transbot_node/linear_max ----
+0.4
+
+---- PARAM: /transbot_node/linear_min ----
+0.0
+
+---- PARAM: /transbot_node/vel ----
+/transbot/get_vel
+
+==================== 11. WORKSPACE / PACKAGES ================
+Workspace packages:
+/home/jetson/transbot_ws/src/transbot_msgs/package.xml
+/home/jetson/transbot_ws/src/transbot_mono/package.xml
+/home/jetson/transbot_ws/src/transbot_linefollow/package.xml
+/home/jetson/transbot_ws/src/transbot_program/package.xml
+/home/jetson/transbot_ws/src/transbot_nav/package.xml
+/home/jetson/transbot_ws/src/transbot_mulity/package.xml
+/home/jetson/transbot_ws/src/transbot_visual/package.xml
+/home/jetson/transbot_ws/src/transbot_laser/package.xml
+/home/jetson/transbot_ws/src/transbot_astra/package.xml
+/home/jetson/transbot_ws/src/transbot_ctrl/package.xml
+/home/jetson/transbot_ws/src/sdp_nfam/package.xml
+/home/jetson/transbot_ws/src/sdp_project/package.xml
+/home/jetson/transbot_ws/src/transbot_bringup/package.xml
+
+sdp_nfam package tree:
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/arduino-cli
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/arduino-cli.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/inventory.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/library_index.json
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/library_index.json.sig
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/package_index.json
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/package_index.json.sig
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/arduinoOTA-1.3.0-linux_arm64.tar.bz2
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/avr-1.8.7.tar.bz2
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/avrdude_8.0-arduino.1_Linux_ARM64.tar.gz
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/avr-gcc-7.3.0-atmel3.6.1-arduino7-aarch64-pc-linux-gnu.tar.bz2
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/ctags-5.8-arduino11-pm-aarch64-linux-gnu.tar.bz2
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/dfu-discovery_v0.1.2_Linux_ARM64.tar.gz
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/mdns-discovery_v1.0.12_Linux_ARM64.tar.gz
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/serial-discovery_v1.4.3_Linux_ARM64.tar.gz
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/downloads/packages/serial-monitor_v0.15.0_Linux_ARM64.tar.gz
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/data/FreqCount-1.3.0.zip
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/FreqCount.cpp
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/FreqCount.h
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/keywords.txt
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/library.json
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/library.properties
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/README.md
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_libs/FreqCount/util/FreqCountTimers.h
+/home/jetson/transbot_ws/src/sdp_nfam/CMakeLists.txt
+/home/jetson/transbot_ws/src/sdp_nfam/config/dashboard.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/config/serial.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/config/topics.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/launch/autonomous_coverage.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/manual_monitor_stack.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/metal_coverage_stack.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_full_system.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_metal_bridge.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_phone_dashboard.launch
+/home/jetson/transbot_ws/src/sdp_nfam/metal_coverage.rviz
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/metal_detector_fixed/metal_detector_fixed.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/metal_detector.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/test/metal_detector_fixed.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/test/metal_detector_nano_example.ino
+/home/jetson/transbot_ws/src/sdp_nfam/package.xml
+/home/jetson/transbot_ws/src/sdp_nfam/package.xml.save
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/coverage_controller.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v15_no_safe_arm.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v1.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v2.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v3.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v4.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v5.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/coverage_metal_detector_v17.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/integration/robot_status_bridge.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/metal_event_bridge.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/metal_serial_mapper_v2.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/nano_serial_reader.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/protocol_notes.md
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/teleop/cmd_vel_mux.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/tests/test1.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/tests/test2.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/tests/test34.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/tests/test_arm.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/utils/find_arm.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/utils/spool_visualizer.py
+/home/jetson/transbot_ws/src/sdp_nfam/sdp_nizami_manual_monitor_final.zip
+/home/jetson/transbot_ws/src/sdp_nfam/spool_visualizer.py
+/home/jetson/transbot_ws/src/sdp_nfam/transbot_manual_monitor_code.zip
+/home/jetson/transbot_ws/src/sdp_nfam/webapp/app.js
+/home/jetson/transbot_ws/src/sdp_nfam/webapp/index.html
+/home/jetson/transbot_ws/src/sdp_nfam/webapp/manifest.webmanifest
+/home/jetson/transbot_ws/src/sdp_nfam/webapp/styles.css
+/home/jetson/transbot_ws/src/sdp_nfam/webapp/sw.js
+
+Yahboom/transbot packages:
+astra_camera /home/jetson/software/transbot_library/src/ros_astra_camera
+astra_launch /home/jetson/software/transbot_library/src/astra_launch
+gmapping /opt/ros/melodic/share/gmapping
+imu_calib /home/jetson/software/transbot_library/src/imu_calib
+imu_filter_madgwick /home/jetson/software/transbot_library/src/imu_filter_madgwick
+neonavigation_common /opt/ros/melodic/share/neonavigation_common
+opencv_apps /home/jetson/software/transbot_library/src/opencv_apps
+openslam_gmapping /opt/ros/melodic/share/openslam_gmapping
+robot_localization /home/jetson/software/transbot_library/src/robot_localization
+rplidar_ros /home/jetson/software/transbot_library/src/rplidar_ros
+rrt_exploration /home/jetson/software/transbot_library/src/rrt_exploration
+sdp_nfam /home/jetson/transbot_ws/src/sdp_nfam
+sdp_project /home/jetson/transbot_ws/src/sdp_project
+transbot_astra /home/jetson/transbot_ws/src/transbot_astra
+transbot_bringup /home/jetson/transbot_ws/src/transbot_bringup
+transbot_config_astra /home/jetson/software/transbot_library/src/transbot_config_astra
+transbot_config_camera /home/jetson/software/transbot_library/src/transbot_config_camera
+transbot_ctrl /home/jetson/transbot_ws/src/transbot_ctrl
+transbot_description /home/jetson/software/transbot_library/src/transbot_description
+transbot_laser /home/jetson/transbot_ws/src/transbot_laser
+transbot_linefollow /home/jetson/transbot_ws/src/transbot_linefollow
+transbot_mono /home/jetson/transbot_ws/src/transbot_mono
+transbot_msgs /home/jetson/transbot_ws/src/transbot_msgs
+transbot_mulity /home/jetson/transbot_ws/src/transbot_mulity
+transbot_nav /home/jetson/transbot_ws/src/transbot_nav
+transbot_program /home/jetson/transbot_ws/src/transbot_program
+transbot_visual /home/jetson/transbot_ws/src/transbot_visual
+yahboom_app_save_map /home/jetson/software/laser_app/src/yahboom_app_save_map
+yahboom_web_savemap_interfaces /home/jetson/software/laser_app/src/yahboom_web_savemap_interfaces
+
+Important package locations:
+
+---- PACKAGE: transbot_bringup ----
+/home/jetson/transbot_ws/src/transbot_bringup
+
+---- PACKAGE: transbot_msgs ----
+/home/jetson/transbot_ws/src/transbot_msgs
+
+---- PACKAGE: sdp_nfam ----
+/home/jetson/transbot_ws/src/sdp_nfam
+
+---- PACKAGE: rplidar_ros ----
+/home/jetson/software/transbot_library/src/rplidar_ros
+
+---- PACKAGE: ydlidar_ros ----
+Package not found
+
+---- PACKAGE: gmapping ----
+/opt/ros/melodic/share/gmapping
+
+---- PACKAGE: slam_gmapping ----
+Package not found
+
+---- PACKAGE: robot_localization ----
+/home/jetson/software/transbot_library/src/robot_localization
+
+==================== 12. LAUNCH / CONFIG FILES ===============
+Launch files:
+/home/jetson/transbot_ws/src/sdp_nfam/launch/autonomous_coverage.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/manual_monitor_stack.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/metal_coverage_stack.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_full_system.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_metal_bridge.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_phone_dashboard.launch
+
+YAML config files:
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/arduino-cli.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/inventory.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/config/dashboard.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/config/serial.yaml
+/home/jetson/transbot_ws/src/sdp_nfam/config/topics.yaml
+
+Coverage / navigation / metal scripts:
+/home/jetson/transbot_ws/src/sdp_nfam/arduino_env/data/packages/arduino/tools/avr-gcc/7.3.0-atmel3.6.1-arduino7/lib/gcc/avr/7.3.0/plugin/include/coverage.h
+/home/jetson/transbot_ws/src/sdp_nfam/launch/autonomous_coverage.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/metal_coverage_stack.launch
+/home/jetson/transbot_ws/src/sdp_nfam/launch/sdp_metal_bridge.launch
+/home/jetson/transbot_ws/src/sdp_nfam/metal_coverage.rviz
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/metal_detector_fixed/metal_detector_fixed.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/metal_detector.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/test/metal_detector_fixed.ino
+/home/jetson/transbot_ws/src/sdp_nfam/metal_detector/test/metal_detector_nano_example.ino
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/coverage_controller.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v15_no_safe_arm.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v1.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v2.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v3.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v4.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/autonomy/legacy/coverage_metal_detector_v5.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/coverage_metal_detector_v17.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/integration/robot_status_bridge.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/metal_event_bridge.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/metal_serial_mapper_v2.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/nano_serial_reader.py
+/home/jetson/transbot_ws/src/sdp_nfam/scripts/metal/protocol_notes.md
+
+==================== 13. NETWORK / DASHBOARD =================
+IP addresses:
+    inet 127.0.0.1/8 scope host lo
+    inet 192.168.1.11/24 brd 192.168.1.255 scope global noprefixroute wlan0
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+    inet 192.168.50.33/24 brd 192.168.50.255 scope global dynamic noprefixroute usb1
+
+Listening ports:
+udp    UNCONN   0        0               127.0.0.1:40034          0.0.0.0:*      users:(("rosout",pid=17799,fd=8))                                              
+tcp    LISTEN   0        5               127.0.0.1:45821          0.0.0.0:*      users:(("python2",pid=17838,fd=6))                                             
+tcp    LISTEN   0        128             127.0.0.1:36385          0.0.0.0:*      users:(("roslaunch",pid=17816,fd=4))                                           
+tcp    LISTEN   0        5               127.0.0.1:37603          0.0.0.0:*      users:(("python",pid=18370,fd=6))                                              
+tcp    LISTEN   0        128             127.0.0.1:45731          0.0.0.0:*      users:(("python2",pid=17838,fd=4))                                             
+tcp    LISTEN   0        128             127.0.0.1:42085          0.0.0.0:*      users:(("roslaunch",pid=18346,fd=4))                                           
+tcp    LISTEN   0        128             127.0.0.1:37127          0.0.0.0:*      users:(("python",pid=17912,fd=4))                                              
+tcp    LISTEN   0        5               127.0.0.1:37033          0.0.0.0:*      users:(("python2",pid=18833,fd=6))                                             
+tcp    LISTEN   0        128             127.0.0.1:35721          0.0.0.0:*      users:(("python",pid=17837,fd=4))                                              
+tcp    LISTEN   0        128             127.0.0.1:33389          0.0.0.0:*      users:(("python3",pid=17836,fd=4))                                             
+tcp    LISTEN   0        5               127.0.0.1:42159          0.0.0.0:*      users:(("python2",pid=18527,fd=6))                                             
+tcp    LISTEN   0        128             127.0.0.1:36623          0.0.0.0:*      users:(("python2",pid=18527,fd=4))                                             
+tcp    LISTEN   0        5               127.0.0.1:40143          0.0.0.0:*      users:(("python",pid=17912,fd=6))                                              
+tcp    LISTEN   0        128             127.0.0.1:11311          0.0.0.0:*      users:(("rosmaster",pid=17786,fd=4))                                           
+tcp    LISTEN   0        128             127.0.0.1:46641          0.0.0.0:*      users:(("roscore",pid=17776,fd=4))                                             
+tcp    LISTEN   0        128             127.0.0.1:37941          0.0.0.0:*      users:(("python2",pid=18833,fd=4))                                             
+tcp    LISTEN   0        128             127.0.0.1:36981          0.0.0.0:*      users:(("python",pid=18370,fd=4))                                              
+tcp    LISTEN   0        128             127.0.0.1:34037          0.0.0.0:*      users:(("roslaunch",pid=18298,fd=4))                                           
+tcp    LISTEN   0        100             127.0.0.1:46965          0.0.0.0:*      users:(("rosout",pid=17799,fd=7))                                              
+tcp    LISTEN   0        5               127.0.0.1:43383          0.0.0.0:*      users:(("python",pid=17837,fd=6))                                              
+tcp    LISTEN   0        5                 0.0.0.0:39479          0.0.0.0:*      users:(("rosout",pid=17799,fd=9))                                              
+tcp    LISTEN   0        5               127.0.0.1:37467          0.0.0.0:*      users:(("python3",pid=17836,fd=6))                                             
+
+==================== 14. END OF AUDIT ========================
