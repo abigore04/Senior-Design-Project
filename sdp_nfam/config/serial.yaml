@@ -1,0 +1,4 @@
+port: /dev/ttyUSB0
+baudrate: 115200
+timeout: 0.05
+reconnect_delay_sec: 2.0

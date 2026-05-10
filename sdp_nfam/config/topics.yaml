@@ -1,0 +1,5 @@
+camera_topic: /usb_cam/image_raw
+odom_topic: /odom
+metal_topic: /metal_detections
+detector_status_topic: /metal_detector_status
+robot_status_topic: /robot_status

@@ -1,0 +1,6 @@
+rosbridge_port: 9090
+video_port: 8080
+webapp_port: 7000
+camera_quality: 80
+layout: landscape_monitor
+control_mode: joystick_only
