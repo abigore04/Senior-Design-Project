@@ -1,8 +1,4 @@
-# Final Year Senior Design Project Final Report
-
-## Project Title
-
-**Autonomous Mine Detection and Mapping Robot**
+# Autonomous Mine Detection and Mapping Robot
 
 ## Team Leader
 
