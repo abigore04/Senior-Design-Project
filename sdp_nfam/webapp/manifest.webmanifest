@@ -1,0 +1,9 @@
+{
+  "name": "Transbot Manual Monitor",
+  "short_name": "Transbot Monitor",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#080b10",
+  "theme_color": "#080b10"
+}

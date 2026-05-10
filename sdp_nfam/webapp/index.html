@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Transbot Manual Monitor</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="title">Yahboom Transbot Jetson</div>
+        <div class="subtitle">Manual joystick control · phone monitor only</div>
+      </div>
+
+      <div class="badges">
+        <span id="rosBadge" class="badge bad">ROS disconnected</span>
+        <span id="metalBadge" class="badge neutral">No metal</span>
+        <span id="detectorBadge" class="badge bad">metal_detector unconnected</span>
+      </div>
+    </header>
+
+    <section class="settings">
+      <label>Jetson host/IP
+        <input id="hostInput" value="127.0.0.1" autocomplete="off" />
+      </label>
+      <label>ROSBridge
+        <input id="rosPortInput" value="9090" inputmode="numeric" />
+      </label>
+      <label>Video
+        <input id="videoPortInput" value="8080" inputmode="numeric" />
+      </label>
+      <label>Camera topic
+        <input id="cameraTopicInput" value="/usb_cam/image_raw" autocomplete="off" />
+      </label>
+      <label>Metal topic
+        <input id="metalTopicInput" value="/metal_detections" autocomplete="off" />
+      </label>
+      <label>Odom topic
+        <input id="odomTopicInput" value="/odom" autocomplete="off" />
+      </label>
+      <label>Detector topic
+        <input id="detectorTopicInput" value="/metal_detector_status" autocomplete="off" />
+      </label>
+      <div class="actions">
+        <button id="saveBtn">Save</button>
+        <button id="connectBtn" class="primary">Connect</button>
+        <button id="disconnectBtn">Disconnect</button>
+        <button id="reloadVideoBtn">Reload video</button>
+      </div>
+    </section>
+
+    <main class="monitor">
+      <aside class="leftPanel">
+        <div class="card bigStatus">
+          <div class="cardTitle">Mode</div>
+          <div class="modeText">MANUAL MONITOR</div>
+          <div class="smallText">Robot and arm are controlled by the physical joystick.</div>
+        </div>
+
+        <div class="metricGrid">
+          <div class="card metric">
+            <div class="cardTitle">Linear speed</div>
+            <div class="value"><span id="linearSpeed">0.00</span><span class="unit">m/s</span></div>
+            <div id="odomStatus" class="smallText">Waiting for /odom…</div>
+          </div>
+
+          <div class="card metric">
+            <div class="cardTitle">Angular speed</div>
+            <div class="value"><span id="angularSpeed">0.00</span><span class="unit">rad/s</span></div>
+            <div class="smallText">Yaw rate from odometry.</div>
+          </div>
+        </div>
+
+        <div class="card metalCard">
+          <div class="cardTitle">Metal detection</div>
+          <div id="metalState" class="metalState idle">NO METAL</div>
+          <div class="row"><span>Confidence</span><strong id="metalConfidence">—</strong></div>
+          <div class="row"><span>Last event</span><strong id="lastMetalTime">—</strong></div>
+          <div class="row"><span>Detector</span><strong id="detectorState">unconnected</strong></div>
+          <div class="smallText" id="metalRaw">Waiting for metal topic…</div>
+        </div>
+      </aside>
+
+      <section class="cameraPanel">
+        <div class="cameraHeader">
+          <div>
+            <div class="cardTitle">Camera</div>
+            <div id="videoUrlText" class="smallText">Video stream not loaded yet.</div>
+          </div>
+          <div class="cameraTopic" id="cameraTopicLabel">/usb_cam/image_raw</div>
+        </div>
+        <div class="videoWrap">
+          <img id="cameraStream" alt="Camera stream" style="width:100%;height:100%;object-fit:contain;" />
+          <div id="cameraHint" class="cameraHint">Press Connect or Reload video.</div>
+        </div>
+      </section>
+    </main>
+
+    <section class="logs">
+      <div class="logsHeader">
+        <span>Logs</span>
+        <button id="clearLogsBtn">Clear</button>
+      </div>
+      <div id="logBox" class="logBox"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
